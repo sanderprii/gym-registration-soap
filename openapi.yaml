@@ -235,19 +235,86 @@ paths:
 
   /sessions:
     get:
-      summary: Get all sessions
-      operationId: getSessions
+      summary: Get current session info
+      description: Returns info about the currently authenticated session (requires token).
       tags:
         - Sessions
+      operationId: getCurrentSession
+      security:
+        - bearerAuth: [ ]
       responses:
         "200":
-          description: List of sessions
+          description: Current session details
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Session"
+                $ref: "#/components/schemas/SessionResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      summary: Log in / create a session
+      description: Authenticates user with email+password and returns a token (public).
+      tags:
+        - Sessions
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "201":
+          description: Session created (login successful)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      summary: Refresh current session
+      description: Refreshes or extends current session token (requires token).
+      tags:
+        - Sessions
+      operationId: refreshSession
+      security:
+        - bearerAuth: [ ]
+      responses:
+        "200":
+          description: Session refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Server error
           content:
@@ -256,15 +323,22 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
     delete:
-      summary: Delete all sessions
-      operationId: deleteAllSessions
+      summary: Log out / delete current session
+      description: Invalidates the current session token (requires token).
       tags:
         - Sessions
+      operationId: logout
       security:
-        - bearerAuth: []  # ⬅ BEARER TOKEN VAJALIK
+        - bearerAuth: [ ]
       responses:
         "204":
-          description: All sessions deleted successfully
+          description: Session deleted (logged out)
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Server error
           content:
@@ -279,21 +353,23 @@ components:
       properties:
         id:
           type: string
-          example: "123e4567-e89b-12d3-a456-426614174000"
+          description: Unique user identifier
+          example: "abc123"
         name:
           type: string
+          description: User's full name
           example: "John Doe"
         email:
           type: string
           format: email
+          description: User email
           example: "john.doe@example.com"
-        age:
-          type: integer
-          example: 28
-        membershipType:
+        password:
           type: string
-          enum: [Basic, Premium, VIP]
-          example: "Premium"
+          format: password
+          description: User password (write-only)
+          example: "StrongPassword123"
+
 
     Membership:
       type: object
@@ -312,22 +388,32 @@ components:
           type: integer
           example: 6
 
-    Session:
+LoginRequest:
+  type: object
+  properties:
+    email:
+      type: string
+      format: email
+      example: "john.doe@example.com"
+    password:
+      type: string
+      format: password
+      example: "StrongPassword123"
+
+    SessionResponse:
       type: object
       properties:
-        id:
+        token:
           type: string
-          example: "sess-abc123"
-        date:
+          description: Bearer token to be used for authenticated requests
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expiresAt:
           type: string
           format: date-time
-          example: "2023-06-10T10:00:00Z"
-        trainer:
-          type: string
-          example: "Jane Trainer"
-        topic:
-          type: string
-          example: "Cardio Session"
+          description: Expiration time of the token
+          example: "2024-02-12T12:00:00Z"
+        user:
+          $ref: "#/components/schemas/User"
 
     ErrorResponse:
       type: object
