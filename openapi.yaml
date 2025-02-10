@@ -388,17 +388,17 @@ components:
           type: integer
           example: 6
 
-LoginRequest:
-  type: object
-  properties:
-    email:
-      type: string
-      format: email
-      example: "john.doe@example.com"
-    password:
-      type: string
-      format: password
-      example: "StrongPassword123"
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        password:
+          type: string
+          format: password
+          example: "StrongPassword123"
 
     SessionResponse:
       type: object
