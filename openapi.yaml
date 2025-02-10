@@ -1,42 +1,26 @@
 openapi: 3.0.0
 info:
   title: Gym Registration API
-  description: API for gym user registration and management
+  description: API for registering and managing gym users. Some endpoints require bearer authentication.
   version: 1.0.0
 
 servers:
-  - url: http://localhost:5000
-    description: Local development server
+  - url: http://localhost:3000
+    description: Local server
+
+tags:
+  - name: Users
+    description: Endpoints related to gym users
+  - name: Memberships
+    description: Manage gym memberships
 
 paths:
-  /register:
-    post:
-      summary: Register a new user for the gym
-      description: Registers a new user with name, email, and password.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegisterUser'
-      responses:
-        "201":
-          description: User successfully registered
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserResponse'
-        "400":
-          description: Invalid input or missing fields
-        "409":
-          description: Email already exists
-        "500":
-          description: Internal server error
-
   /users:
     get:
-      summary: Get all registered users
-      description: Returns a list of all registered gym users.
+      summary: Get all users
+      operationId: getUsers
+      tags:
+        - Users
       responses:
         "200":
           description: A list of users
@@ -45,41 +29,260 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserResponse'
+                  $ref: "#/components/schemas/User"
         "500":
-          description: Internal server error
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      summary: Register a new user
+      operationId: createUser
+      tags:
+        - Users
+      security:
+        - bearerAuth: []  # ⬅ BEARER TOKEN VAJALIK
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "201":
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Bad request (invalid input)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{userId}:
+    get:
+      summary: Get a specific user by ID
+      operationId: getUserById
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      summary: Update a user's details
+      operationId: updateUser
+      tags:
+        - Users
+      security:
+        - bearerAuth: []  # ⬅ BEARER TOKEN VAJALIK
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Bad request (invalid input)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete a user by ID
+      operationId: deleteUser
+      tags:
+        - Users
+      security:
+        - bearerAuth: []  # ⬅ BEARER TOKEN VAJALIK
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: User deleted successfully
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /memberships:
+    get:
+      summary: Get all gym memberships
+      operationId: getMemberships
+      tags:
+        - Memberships
+      responses:
+        "200":
+          description: List of memberships
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Membership"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      summary: Create a new membership
+      operationId: createMembership
+      tags:
+        - Memberships
+      security:
+        - bearerAuth: []  # ⬅ BEARER TOKEN VAJALIK
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Membership"
+      responses:
+        "201":
+          description: Membership created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Membership"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
-    RegisterUser:
-      type: object
-      required:
-        - fullName
-        - email
-        - password
-      properties:
-        fullName:
-          type: string
-          example: John Doe
-        email:
-          type: string
-          format: email
-          example: johndoe@example.com
-        password:
-          type: string
-          format: password
-          example: StrongPassword123!
-
-    UserResponse:
+    User:
       type: object
       properties:
         id:
-          type: integer
-          example: 1
-        fullName:
           type: string
-          example: John Doe
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "John Doe"
         email:
           type: string
           format: email
-          example: johndoe@example.com
+          example: "john.doe@example.com"
+        age:
+          type: integer
+          example: 28
+        membershipType:
+          type: string
+          enum: [Basic, Premium, VIP]
+          example: "Premium"
+
+    Membership:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "m123456"
+        type:
+          type: string
+          example: "Premium"
+        price:
+          type: number
+          format: float
+          example: 29.99
+        durationMonths:
+          type: integer
+          example: 6
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "User not found"
+        statusCode:
+          type: integer
+          example: 404
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
