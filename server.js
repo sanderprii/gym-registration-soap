@@ -1,16 +1,18 @@
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
-const yaml = require('yaml');
-const fs = require('fs');
+const yaml = require('yamljs');
+const path = require('path');
 
 const app = express();
 const port = 3000;
 
-// Laeb OpenAPI spetsifikatsiooni YAML formaadis
-const openapiDocument = yaml.parse(fs.readFileSync('./openapi.yaml', 'utf8'));
+// Laeb YAML-faili
+const openapiDocument = yaml.load(path.join(__dirname, 'openapi.yaml'));
 
+// Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
 
+// Start
 app.listen(port, () => {
-    console.log(`Swagger UI available at http://localhost:${port}/api-docs`);
+    console.log(`Swagger UI running at http://localhost:${port}/api-docs`);
 });
