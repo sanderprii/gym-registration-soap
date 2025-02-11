@@ -1,16 +1,12 @@
 # Gym Registration API
 
-This project is a simple Node.js application demonstrating a basic Gym Registration API for a school assignment. The API is documented using an OpenAPI (Swagger) specification in YAML format. It provides endpoints for creating, retrieving, updating, and deleting user data.
+This project is a simple Node.js application demonstrating a basic Gym Registration API. The API is documented using an OpenAPI (Swagger) specification in YAML format. It provides endpoints for creating, retrieving, updating, and deleting user data.
 
 ## Features
 
 - **Express.js** server for handling REST endpoints
 - **Swagger UI** setup for easy API documentation and testing
-- **CRUD** operations on `User` resource:
-    - **GET** (all users or single user by ID)
-    - **POST** (create a new user)
-    - **PUT** (update an existing user)
-    - **DELETE** (remove a user)
+
 
 ## Prerequisites
 
@@ -24,6 +20,7 @@ This project is a simple Node.js application demonstrating a basic Gym Registrat
 2. **Install** dependencies:
 
    ```bash
+   
    npm install
 
 
@@ -34,7 +31,7 @@ This project is a simple Node.js application demonstrating a basic Gym Registrat
 
 4. **Open** the Swagger UI in your browser:
 ```bash
-   [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+   http://localhost:3000/api-docs
 ```
 ## How It Works
 1. Swagger Documentation:
@@ -48,6 +45,14 @@ POST /users: Creates a new user.
 GET /users/{userId}: Retrieves a single user by ID.
 PUT /users/{userId}: Updates user details for a given ID.
 DELETE /users/{userId}: Deletes a user by ID.
+
+GET /memberships: Retrieves all membership types.
+POST /memberships: Creates a new membership type.
+
+GET /sessions: get current session
+POST /sessions: create a new session
+PUT /sessions: update session
+DELETE /sessions: delete session
 
 3. User Model
 
