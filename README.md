@@ -2,16 +2,35 @@
 
 This project is a simple Node.js application demonstrating a basic Gym Registration API. The API is documented using an OpenAPI (Swagger) specification in YAML format. It provides endpoints for creating, retrieving, updating, and deleting user data.
 
-## Features
+##Features
 
-- **Express.js** server for handling REST endpoints
-- **Swagger UI** setup for easy API documentation and testing
+1. OpenAPI Specification
 
+Includes a YAML file (openapi.yaml) that defines all the available endpoints, request/response formats, authentication methods, and more.
+
+2. Swagger UI
+
+The server hosts a user-friendly UI for exploring and testing the endpoints directly from the browser.
+
+3. JWT-based Authentication
+
+
+POST /sessions to log in (get a token).
+DELETE /sessions to log out (token is revoked).
+GET /sessions to check if a session is valid.
+4. In-Memory Storage
+
+Trainees (users of the gym system)
+Workouts (the available workout types)
+Routines (schedules/availability for trainees)
+Registrations (booking a slot in a workout)
+5. CRUD Operations
+
+Demonstrates basic create, read, update, and delete endpoints for each resource.
 
 ## Prerequisites
-
-- **Node.js** (v14 or later recommended)
-- **npm** (v6 or later)
+Node.js (v12 or newer recommended)
+npm (Node Package Manager)
 
 ## Getting Started
 
@@ -36,30 +55,4 @@ This project is a simple Node.js application demonstrating a basic Gym Registrat
 ## How It Works
 1. Swagger Documentation:
 
-You can view the full API documentation at http://localhost:3000/api-docs. Swagger UI provides a user-friendly interface to try out endpoints for GET, POST, PUT, and DELETE requests.
-
-2. Endpoints: 
-
-GET /users: Retrieves all users.
-POST /users: Creates a new user.
-GET /users/{userId}: Retrieves a single user by ID.
-PUT /users/{userId}: Updates user details for a given ID.
-DELETE /users/{userId}: Deletes a user by ID.
-
-GET /memberships: Retrieves all membership types.
-POST /memberships: Creates a new membership type.
-
-GET /sessions: get current session
-POST /sessions: create a new session
-PUT /sessions: update session
-DELETE /sessions: delete session
-
-3. User Model
-
-Defined in the openapi.yaml file under components.schemas.User. It includes:
-
-id: string
-name: string
-email: string (format: email)
-age: integer
-membershipType: string (enum: Basic, Premium, VIP)
+You can view the full API documentation at http://localhost:3000/api-docs. 

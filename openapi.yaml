@@ -1,432 +1,1053 @@
 openapi: 3.0.0
 info:
-  title: Gym Registration API
-  description: API for registering and managing gym users. Some endpoints require bearer authentication.
+  title: Gym Training Registration API
+  description: API for scheduling and managing gym training sessions
   version: 1.0.0
-
 servers:
-  - url: http://localhost:3000
-    description: Local server
-
-tags:
-  - name: Users
-    description: Endpoints related to gym users
-  - name: Memberships
-    description: Manage gym memberships
-  - name: Sessions
-    description: Manage gym sessions
-
+  - url: /
 paths:
-  /users:
+  /trainees:
     get:
-      summary: Get all users
-      operationId: getUsers
+      security:
+        - BearerAuth: []
       tags:
-        - Users
+        - Trainees
+      summary: List all trainees
+      description: Retrieve a paginated list of all trainees.
+      parameters:
+        - name: page
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: The page number to retrieve.
+        - name: pageSize
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: The number of trainees to return per page.
       responses:
-        "200":
-          description: A list of users
+        '200':
+          description: List of trainees retrieved successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/User"
-        "500":
-          description: Server error
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Trainee'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '400':
+          description: Invalid pagination parameters
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Invalid pagination parameters"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
-      summary: Register a new user
-      operationId: createUser
       tags:
-        - Users
-      security:
-        - bearerAuth: []  # ⬅ BEARER TOKEN VAJALIK
+        - Trainees
+      summary: Create a new trainee
+      description: Create a new trainee with a name, email, password, and optional timezone.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/User"
+              $ref: '#/components/schemas/Trainee'
       responses:
-        "201":
-          description: User successfully created
+        '201':
+          description: Trainee created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-        "400":
-          description: Bad request (invalid input)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /users/{userId}:
-    get:
-      summary: Get a specific user by ID
-      operationId: getUserById
-      tags:
-        - Users
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: User found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
-        "404":
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-    put:
-      summary: Update a user's details
-      operationId: updateUser
-      tags:
-        - Users
-      security:
-        - bearerAuth: []  # ⬅ BEARER TOKEN VAJALIK
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/User"
-      responses:
-        "200":
-          description: User updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
-        "400":
-          description: Bad request (invalid input)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-    delete:
-      summary: Delete a user by ID
-      operationId: deleteUser
-      tags:
-        - Users
-      security:
-        - bearerAuth: []  # ⬅ BEARER TOKEN VAJALIK
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "204":
-          description: User deleted successfully
-        "404":
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /memberships:
-    get:
-      summary: Get all gym memberships
-      operationId: getMemberships
-      tags:
-        - Memberships
-      responses:
-        "200":
-          description: List of memberships
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Membership"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-    post:
-      summary: Create a new membership
-      operationId: createMembership
-      tags:
-        - Memberships
-      security:
-        - bearerAuth: []  # ⬅ BEARER TOKEN VAJALIK
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Membership"
-      responses:
-        "201":
-          description: Membership created successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Membership"
-        "400":
+                $ref: '#/components/schemas/Trainee'
+        '400':
           description: Invalid input
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Server error
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /sessions:
+  /trainees/{traineeId}:
     get:
-      summary: Get current session info
-      description: Returns info about the currently authenticated session (requires token).
-      tags:
-        - Sessions
-      operationId: getCurrentSession
       security:
-        - bearerAuth: [ ]
-      responses:
-        "200":
-          description: Current session details
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SessionResponse"
-        "401":
-          description: Unauthorized (missing or invalid token)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-    post:
-      summary: Log in / create a session
-      description: Authenticates user with email+password and returns a token (public).
+        - BearerAuth: []
       tags:
-        - Sessions
-      operationId: login
+        - Trainees
+      summary: Get trainee details
+      description: Retrieve details of a specific trainee by their ID.
+      parameters:
+        - name: traineeId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the trainee to retrieve.
+      responses:
+        '200':
+          description: Trainee details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trainee'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Trainee not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      security:
+        - BearerAuth: []
+      tags:
+        - Trainees
+      summary: Partially update a trainee
+      description: Update specific fields of a trainee by their ID.
+      parameters:
+        - name: traineeId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the trainee to update.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginRequest"
+              $ref: '#/components/schemas/TraineePatch'
       responses:
-        "201":
-          description: Session created (login successful)
+        '200':
+          description: Trainee updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SessionResponse"
-        "401":
-          description: Invalid credentials
+                $ref: '#/components/schemas/Trainee'
+        '400':
+          description: Invalid input
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Server error
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Trainee not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-    put:
-      summary: Refresh current session
-      description: Refreshes or extends current session token (requires token).
-      tags:
-        - Sessions
-      operationId: refreshSession
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
       security:
-        - bearerAuth: [ ]
+        - BearerAuth: []
+      tags:
+        - Trainees
+      summary: Delete a trainee
+      description: Delete a specific trainee by their ID.
+      parameters:
+        - name: traineeId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the trainee to delete.
       responses:
-        "200":
-          description: Session refreshed
+        '204':
+          description: Trainee deleted successfully
+        '404':
+          description: Trainee not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SessionResponse"
-        "401":
-          description: Unauthorized (missing or invalid token)
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Resource not found"
+        '500':
+          description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /sessions:
+    post:
+      tags:
+        - Authentication
+      summary: Create session (login)
+      description: Authenticate trainee and create session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Login successful
+        '400':
+          description: Missing email or password
+        '401':
+          description: Invalid credentials
+        '500':
           description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
     delete:
-      summary: Log out / delete current session
-      description: Invalidates the current session token (requires token).
       tags:
-        - Sessions
-      operationId: logout
-      security:
-        - bearerAuth: [ ]
+        - Authentication
+      summary: Destroy session (logout)
+      description: End trainee session
       responses:
-        "204":
-          description: Session deleted (logged out)
-        "401":
-          description: Unauthorized (missing or invalid token)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
+        '200':
+          description: Logout successful
+        '500':
           description: Server error
+
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Authentication
+      summary: Check session
+      description: Check if trainee is authenticated
+      responses:
+        '200':
+          description: Session status
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                type: object
+                properties:
+                  authenticated:
+                    type: boolean
+                  trainee:
+                    $ref: '#/components/schemas/Trainee'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /workouts:
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - Workouts
+      summary: Create a new workout type
+      description: Create a new workout type with a name, duration, and optional details.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkoutType'
+      responses:
+        '201':
+          description: Workout type created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutType'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Invalid input"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Workouts
+      summary: List all workouts
+      description: Retrieve a list of all workout types.
+      responses:
+        '200':
+          description: List of workouts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workout'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /workouts/{workoutId}:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Workouts
+      summary: Get workout details
+      description: Retrieve details of a specific workout by its ID.
+      parameters:
+        - name: workoutId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the workout to retrieve.
+      responses:
+        '200':
+          description: Workout found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workout'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Workout not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      security:
+        - BearerAuth: []
+      tags:
+        - Workouts
+      summary: Partially update a workout
+      description: Update specific fields of a workout by its ID.
+      parameters:
+        - name: workoutId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the workout to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkoutPatch'
+      responses:
+        '200':
+          description: Workout updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutType'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Workout not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      security:
+        - BearerAuth: []
+      tags:
+        - Workouts
+      summary: Delete a workout
+      description: Delete a specific workout by its ID.
+      parameters:
+        - name: workoutId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the workout to delete.
+      responses:
+        '204':
+          description: Workout deleted successfully
+        '404':
+          description: Workout not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Resource not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /routines:
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - Routines
+      summary: Create a new routine
+      description: Create a new routine for a trainee with their availability.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoutineInput'
+      responses:
+        '201':
+          description: Routine created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Routine'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Invalid input"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Internal server error"
+
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Routines
+      summary: List all routines
+      description: Retrieve a list of all routines.
+      responses:
+        '200':
+          description: List of routines retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Routine'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /routines/{traineeId}:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Routines
+      summary: Get trainee's routine
+      description: Retrieve the routine for a specific trainee by their ID.
+      parameters:
+        - name: traineeId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the trainee whose routine to retrieve.
+      responses:
+        '200':
+          description: Routine retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Routine'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Routine not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      security:
+        - BearerAuth: []
+      tags:
+        - Routines
+      summary: Partially update a trainee's routine
+      description: Update specific fields of a trainee's routine by their ID.
+      parameters:
+        - name: traineeId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the trainee whose routine to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoutinePatch'
+      responses:
+        '200':
+          description: Routine updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Routine'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Routine not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Internal server error"
+    delete:
+      security:
+        - BearerAuth: []
+      tags:
+        - Routines
+      summary: Delete a routine
+      description: Delete the routine for a specific trainee by their ID.
+      parameters:
+        - name: traineeId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the trainee whose routine to delete.
+      responses:
+        '204':
+          description: Routine deleted successfully
+        '404':
+          description: Routine not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Resource not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Internal server error"
+
+  /registrations:
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - Registrations
+      summary: Register for a workout
+      description: Create a new registration for a trainee to attend a workout session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Registration'
+      responses:
+        '201':
+          description: Registration created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Invalid input"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Registrations
+      summary: List all registrations
+      description: Retrieve a list of all registrations.
+      responses:
+        '200':
+          description: List of registrations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Registration'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /registrations/{registrationId}:
+    patch:
+      security:
+        - BearerAuth: []
+      tags:
+        - Registrations
+      summary: Partially update a registration
+      description: Update specific fields of a registration by its ID.
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the registration to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationPatch'
+      responses:
+        '200':
+          description: Registration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Registration not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      security:
+        - BearerAuth: []
+      tags:
+        - Registrations
+      summary: Delete a registration
+      description: Delete a specific registration by its ID.
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the registration to delete.
+      responses:
+        '204':
+          description: Registration deleted successfully
+        '404':
+          description: Registration not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Resource not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Registrations
+      summary: Get registration details
+      description: Retrieve details of a specific registration by its ID.
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the registration to retrieve.
+      responses:
+        '200':
+          description: Registration details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Registration not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+
   schemas:
-    User:
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+      required:
+        - page
+        - pageSize
+        - total
+
+    Trainee:
       type: object
       properties:
         id:
           type: string
-          description: Unique user identifier
-          example: "abc123"
         name:
           type: string
-          description: User's full name
-          example: "John Doe"
         email:
           type: string
-          format: email
-          description: User email
-          example: "john.doe@example.com"
         password:
           type: string
-          format: password
-          description: User password (write-only)
-          example: "StrongPassword123"
+        timezone:
+          type: string
+        token:
+          type: string  # Token is optional
+      required:
+        - id
+        - name
+        - email
+        - password
 
+    TraineePatch:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        timezone:
+          type: string
+      minProperties: 1  # At least one field must be provided
 
-    Membership:
+    WorkoutType:
       type: object
       properties:
         id:
           type: string
-          example: "m123456"
-        type:
+        name:
           type: string
-          example: "Premium"
-        price:
-          type: number
-          format: float
-          example: 29.99
-        durationMonths:
+        duration:
           type: integer
-          example: 6
+        description:
+          type: string
+        color:
+          type: string
+      required:
+        - name
+        - duration
 
-    LoginRequest:
+    Workout:
       type: object
       properties:
-        email:
+        id:
           type: string
-          format: email
-          example: "john.doe@example.com"
-        password:
+        name:
           type: string
-          format: password
-          example: "StrongPassword123"
+        duration:
+          type: integer
+        description:
+          type: string
+        color:
+          type: string
+      required:
+        - id
+        - name
+        - duration
 
-    SessionResponse:
+    WorkoutPatch:
       type: object
       properties:
-        token:
+        name:
           type: string
-          description: Bearer token to be used for authenticated requests
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        expiresAt:
+        duration:
+          type: integer
+        description:
+          type: string
+        color:
+          type: string
+      minProperties: 1  # At least one field must be provided
+
+    Routine:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlot'
+      required:
+        - id
+        - userId
+        - availability
+
+    RoutineInput:
+      type: object
+      properties:
+        userId:
+          type: string
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlot'
+      required:
+        - userId
+        - availability
+
+    RoutinePatch:
+      type: object
+      properties:
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlot'
+      minProperties: 1  # At least one field must be provided
+
+    TimeSlot:
+      type: object
+      properties:
+        day:
+          type: string
+          enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+      required:
+        - day
+        - startTime
+        - endTime
+
+    Registration:
+      type: object
+      properties:
+        id:
+          type: string
+        eventId:
+          type: string
+        userId:
+          type: string
+        inviteeEmail:
+          type: string
+        startTime:
           type: string
           format: date-time
-          description: Expiration time of the token
-          example: "2024-02-12T12:00:00Z"
-        user:
-          $ref: "#/components/schemas/User"
+        endTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [scheduled, canceled, completed]
+      required:
+        - eventId
+        - userId
+        - inviteeEmail
+        - startTime
+
+    RegistrationPatch:
+      type: object
+      properties:
+        eventId:
+          type: string
+        userId:
+          type: string
+        inviteeEmail:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+      minProperties: 1
 
     ErrorResponse:
       type: object
       properties:
-        error:
+        message:
           type: string
-          example: "User not found"
-        statusCode:
-          type: integer
-          example: 404
-
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+          example: "Bad Request"
+      required:
+        - message
