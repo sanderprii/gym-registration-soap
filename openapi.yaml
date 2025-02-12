@@ -4,12 +4,13 @@ info:
   description: API for scheduling and managing gym training sessions
   version: 1.0.0
 servers:
-  - url: /
+  - url: http://localhost:3000/api-docs
+    description: Local Development Server
 paths:
   /trainees:
     get:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Trainees
       summary: List all trainees
@@ -100,7 +101,7 @@ paths:
   /trainees/{traineeId}:
     get:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Trainees
       summary: Get trainee details
@@ -139,7 +140,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
     patch:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Trainees
       summary: Partially update a trainee
@@ -184,7 +185,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
     delete:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Trainees
       summary: Delete a trainee
@@ -257,7 +258,7 @@ paths:
 
     get:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Authentication
       summary: Check session
@@ -290,7 +291,7 @@ paths:
   /workouts:
     post:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Workouts
       summary: Create a new workout type
@@ -325,7 +326,7 @@ paths:
 
     get:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Workouts
       summary: List all workouts
@@ -355,7 +356,7 @@ paths:
   /workouts/{workoutId}:
     get:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Workouts
       summary: Get workout details
@@ -394,7 +395,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
     patch:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Workouts
       summary: Partially update a workout
@@ -439,7 +440,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
     delete:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Workouts
       summary: Delete a workout
@@ -472,7 +473,7 @@ paths:
   /routines:
     post:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Routines
       summary: Create a new routine
@@ -509,11 +510,18 @@ paths:
 
     get:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Routines
-      summary: List all routines
-      description: Retrieve a list of all routines.
+      summary: List all routines or filter by trainee
+      description: Retrieve a list of all routines or filter by a specific trainee ID.
+      parameters:
+        - name: traineeId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The ID of the trainee whose routines to retrieve.
       responses:
         '200':
           description: List of routines retrieved successfully
@@ -529,6 +537,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No routines found for the given trainee ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -537,48 +551,10 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
   /routines/{traineeId}:
-    get:
-      security:
-        - BearerAuth: []
-      tags:
-        - Routines
-      summary: Get trainee's routine
-      description: Retrieve the routine for a specific trainee by their ID.
-      parameters:
-        - name: traineeId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The ID of the trainee whose routine to retrieve.
-      responses:
-        '200':
-          description: Routine retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Routine'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Routine not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+
     patch:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Routines
       summary: Partially update a trainee's routine
@@ -625,7 +601,7 @@ paths:
                 message: "Internal server error"
     delete:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Routines
       summary: Delete a routine
@@ -660,7 +636,7 @@ paths:
   /registrations:
     post:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Registrations
       summary: Register for a workout
@@ -694,7 +670,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
     get:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Registrations
       summary: List all registrations
@@ -724,7 +700,7 @@ paths:
   /registrations/{registrationId}:
     patch:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Registrations
       summary: Partially update a registration
@@ -769,7 +745,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
     delete:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Registrations
       summary: Delete a registration
@@ -800,7 +776,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
     get:
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       tags:
         - Registrations
       summary: Get registration details
@@ -988,7 +964,7 @@ components:
       properties:
         day:
           type: string
-          enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+          enum: [ monday, tuesday, wednesday, thursday, friday, saturday, sunday ]
         startTime:
           type: string
           format: time
@@ -1019,7 +995,7 @@ components:
           format: date-time
         status:
           type: string
-          enum: [scheduled, canceled, completed]
+          enum: [ scheduled, canceled, completed ]
       required:
         - eventId
         - userId
