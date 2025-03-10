@@ -1,11 +1,11 @@
 openapi: 3.0.0
 info:
-  title: Gym Training Registration API
-  description: API for scheduling and managing gym training sessions
+  title: Jõusaali Treeningute Registreerimise API
+  description: API jõusaali treeningute planeerimiseks ja haldamiseks
   version: 1.0.0
 servers:
-  - url: http://localhost:3000/api-docs
-    description: Local Development Server
+  - url: http://localhost:3000/docs/et
+    description: Kohalik arendusserver (eesti keeles)
 
 
 paths:
@@ -14,9 +14,9 @@ paths:
       security:
         - BearerAuth: [ ]
       tags:
-        - Trainees
-      summary: List all trainees
-      description: Retrieve a paginated list of all trainees.
+        - Treenijad
+      summary: Kõigi treenijate nimekiri
+      description: Tagastab lehekülgedeks jagatud nimekirja kõigist treenijatest.
       parameters:
         - name: page
           in: query
@@ -25,7 +25,8 @@ paths:
             type: integer
             minimum: 1
             default: 1
-          description: The page number to retrieve.
+          description: Soovitud lehekülje number.
+          example: 1
         - name: pageSize
           in: query
           required: true
@@ -34,10 +35,11 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
-          description: The number of trainees to return per page.
+          description: Mitu treenijat ühel leheküljel kuvatakse.
+          example: 20
       responses:
         '200':
-          description: List of trainees retrieved successfully
+          description: Treenijate nimekiri edukalt tagastatud
           content:
             application/json:
               schema:
@@ -64,961 +66,31 @@ paths:
                   pageSize: 20
                   total: 2
         '400':
-          description: Invalid pagination parameters
+          description: Vigased lehekülje parameetrid
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Invalid pagination parameters. Page must be at least 1 and pageSize must be between 1 and 100."
+                message: "Vigased lehekülje parameetrid. Lehekülg peab olema vähemalt 1 ja lehekülje suurus vahemikus 1 kuni 100."
         '401':
-          description: Unauthorized
+          description: Autoriseerimata
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Authentication required. Please provide a valid token."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-    post:
-      tags:
-        - Trainees
-      summary: Create a new trainee
-      description: Create a new trainee with a name, email, password, and optional timezone.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Trainee'
-            example:
-              name: "Jaan Tamm"
-              email: "jaan.tamm@example.com"
-              password: "turvalisParool123"
-              timezone: "Europe/Tallinn"
-      responses:
-        '201':
-          description: Trainee created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Trainee'
-              example:
-                id: "12345"
-                name: "Jaan Tamm"
-                email: "jaan.tamm@example.com"
-                timezone: "Europe/Tallinn"
-                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid input. Email already exists or required fields are missing."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-
-  /trainees/{traineeId}:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
     get:
       security:
         - BearerAuth: [ ]
       tags:
-        - Trainees
-      summary: Get trainee details
-      description: Retrieve details of a specific trainee by their ID.
-      parameters:
-        - name: traineeId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The ID of the trainee to retrieve.
-          example: "12345"
+        - Registreerimised
+      summary: Kõigi registreeringute nimekiri
+      description: Tagastab nimekirja kõigist registreeringutest.
       responses:
         '200':
-          description: Trainee details retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Trainee'
-              example:
-                id: "12345"
-                name: "Jaan Tamm"
-                email: "jaan.tamm@example.com"
-                timezone: "Europe/Tallinn"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
-        '404':
-          description: Trainee not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Trainee with ID 12345 not found."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-    patch:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Trainees
-      summary: Partially update a trainee
-      description: Update specific fields of a trainee by their ID.
-      parameters:
-        - name: traineeId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The ID of the trainee to update.
-          example: "12345"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TraineePatch'
-            example:
-              name: "Jaan Kuusk"
-              timezone: "Europe/Helsinki"
-      responses:
-        '200':
-          description: Trainee updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Trainee'
-              example:
-                id: "12345"
-                name: "Jaan Kuusk"
-                email: "jaan.tamm@example.com"
-                timezone: "Europe/Helsinki"
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid input. Email format is incorrect."
-        '404':
-          description: Trainee not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Trainee with ID 12345 not found."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-    delete:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Trainees
-      summary: Delete a trainee
-      description: Delete a specific trainee by their ID.
-      parameters:
-        - name: traineeId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The ID of the trainee to delete.
-          example: "12345"
-      responses:
-        '204':
-          description: Trainee deleted successfully
-        '404':
-          description: Trainee not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Trainee with ID 12345 not found."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-
-  /sessions:
-    post:
-      tags:
-        - Authentication
-      summary: Create session (login)
-      description: Authenticate trainee and create session
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                password:
-                  type: string
-              required:
-                - email
-                - password
-            example:
-              email: "jaan.tamm@example.com"
-              password: "turvalisParool123"
-      responses:
-        '200':
-          description: Login successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  authenticated:
-                    type: boolean
-                  trainee:
-                    $ref: '#/components/schemas/Trainee'
-                  token:
-                    type: string
-              example:
-                authenticated: true
-                trainee:
-                  id: "12345"
-                  name: "Jaan Tamm"
-                  email: "jaan.tamm@example.com"
-                  timezone: "Europe/Tallinn"
-                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        '400':
-          description: Missing email or password
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Email and password are required."
-        '401':
-          description: Invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid email or password."
-        '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-
-    delete:
-      tags:
-        - Authentication
-      summary: Destroy session (logout)
-      description: End trainee session
-      security:
-        - BearerAuth: [ ]
-      responses:
-        '200':
-          description: Logout successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-              example:
-                message: "Logout successful."
-        '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-
-    get:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Authentication
-      summary: Check session
-      description: Check if trainee is authenticated
-      responses:
-        '200':
-          description: Session status
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  authenticated:
-                    type: boolean
-                  trainee:
-                    $ref: '#/components/schemas/Trainee'
-              example:
-                authenticated: true
-                trainee:
-                  id: "12345"
-                  name: "Jaan Tamm"
-                  email: "jaan.tamm@example.com"
-                  timezone: "Europe/Tallinn"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-
-  /workouts:
-    post:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Workouts
-      summary: Create a new workout type
-      description: Create a new workout type with a name, duration, and optional details.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WorkoutType'
-            example:
-              name: "HIIT Training"
-              duration: 60
-              description: "High-intensity interval training"
-              color: "#FF5733"
-      responses:
-        '201':
-          description: Workout type created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WorkoutType'
-              example:
-                id: "W12345"
-                name: "HIIT Training"
-                duration: 60
-                description: "High-intensity interval training"
-                color: "#FF5733"
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid input. Name and duration are required."
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-
-    get:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Workouts
-      summary: List all workouts
-      description: Retrieve a list of all workout types.
-      responses:
-        '200':
-          description: List of workouts retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Workout'
-              example:
-                - id: "W12345"
-                  name: "HIIT Training"
-                  duration: 60
-                  description: "High-intensity interval training"
-                  color: "#FF5733"
-                - id: "W67890"
-                  name: "Yoga"
-                  duration: 90
-                  description: "Relaxing yoga session"
-                  color: "#33FFBD"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-
-  /workouts/{workoutId}:
-    get:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Workouts
-      summary: Get workout details
-      description: Retrieve details of a specific workout by its ID.
-      parameters:
-        - name: workoutId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The ID of the workout to retrieve.
-          example: "W12345"
-      responses:
-        '200':
-          description: Workout found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Workout'
-              example:
-                id: "W12345"
-                name: "HIIT Training"
-                duration: 60
-                description: "High-intensity interval training"
-                color: "#FF5733"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
-        '404':
-          description: Workout not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Workout with ID W12345 not found."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-    patch:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Workouts
-      summary: Partially update a workout
-      description: Update specific fields of a workout by its ID.
-      parameters:
-        - name: workoutId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The ID of the workout to update.
-          example: "W12345"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WorkoutPatch'
-            example:
-              name: "Advanced HIIT Training"
-              duration: 75
-              color: "#FF0000"
-      responses:
-        '200':
-          description: Workout updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WorkoutType'
-              example:
-                id: "W12345"
-                name: "Advanced HIIT Training"
-                duration: 75
-                description: "High-intensity interval training"
-                color: "#FF0000"
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid input. Duration must be a positive integer."
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
-        '404':
-          description: Workout not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Workout with ID W12345 not found."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-    delete:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Workouts
-      summary: Delete a workout
-      description: Delete a specific workout by its ID.
-      parameters:
-        - name: workoutId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The ID of the workout to delete.
-          example: "W12345"
-      responses:
-        '204':
-          description: Workout deleted successfully
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
-        '404':
-          description: Workout not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Workout with ID W12345 not found."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-
-  /routines:
-    post:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Routines
-      summary: Create a new routine
-      description: Create a new routine for a trainee with their availability.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RoutineInput'
-            example:
-              userId: "12345"
-              availability:
-                - day: "monday"
-                  startTime: "08:00"
-                  endTime: "10:00"
-                - day: "wednesday"
-                  startTime: "17:00"
-                  endTime: "19:00"
-                - day: "friday"
-                  startTime: "16:00"
-                  endTime: "18:00"
-      responses:
-        '201':
-          description: Routine created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Routine'
-              example:
-                id: "R12345"
-                userId: "12345"
-                availability:
-                  - day: "monday"
-                    startTime: "08:00"
-                    endTime: "10:00"
-                  - day: "wednesday"
-                    startTime: "17:00"
-                    endTime: "19:00"
-                  - day: "friday"
-                    startTime: "16:00"
-                    endTime: "18:00"
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid input. User ID and availability are required."
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-
-    get:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Routines
-      summary: List all routines or filter by trainee
-      description: Retrieve a list of all routines or filter by a specific trainee ID.
-      parameters:
-        - name: traineeId
-          in: query
-          required: false
-          schema:
-            type: string
-          description: The ID of the trainee whose routines to retrieve.
-          example: "12345"
-      responses:
-        '200':
-          description: List of routines retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Routine'
-              example:
-                - id: "R12345"
-                  userId: "12345"
-                  availability:
-                    - day: "monday"
-                      startTime: "08:00"
-                      endTime: "10:00"
-                    - day: "wednesday"
-                      startTime: "17:00"
-                      endTime: "19:00"
-                    - day: "friday"
-                      startTime: "16:00"
-                      endTime: "18:00"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
-        '404':
-          description: No routines found for the given trainee ID
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "No routines found for trainee with ID 12345."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-
-  /routines/{traineeId}:
-    patch:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Routines
-      summary: Partially update a trainee's routine
-      description: Update specific fields of a trainee's routine by their ID.
-      parameters:
-        - name: traineeId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The ID of the trainee whose routine to update.
-          example: "12345"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RoutinePatch'
-            example:
-              availability:
-                - day: "monday"
-                  startTime: "09:00"
-                  endTime: "11:00"
-                - day: "thursday"
-                  startTime: "18:00"
-                  endTime: "20:00"
-                - day: "saturday"
-                  startTime: "10:00"
-                  endTime: "12:00"
-      responses:
-        '200':
-          description: Routine updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Routine'
-              example:
-                id: "R12345"
-                userId: "12345"
-                availability:
-                  - day: "monday"
-                    startTime: "09:00"
-                    endTime: "11:00"
-                  - day: "thursday"
-                    startTime: "18:00"
-                    endTime: "20:00"
-                  - day: "saturday"
-                    startTime: "10:00"
-                    endTime: "12:00"
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid input. Availability format is incorrect."
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
-        '404':
-          description: Routine not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Routine for trainee with ID 12345 not found."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-    delete:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Routines
-      summary: Delete a routine
-      description: Delete the routine for a specific trainee by their ID.
-      parameters:
-        - name: traineeId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The ID of the trainee whose routine to delete.
-          example: "12345"
-      responses:
-        '204':
-          description: Routine deleted successfully
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
-        '404':
-          description: Routine not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Routine for trainee with ID 12345 not found."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-
-  /registrations:
-    post:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Registrations
-      summary: Register for a workout
-      description: Create a new registration for a trainee to attend a workout session.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Registration'
-            example:
-              eventId: "W12345"
-              userId: "12345"
-              inviteeEmail: "jaan.tamm@example.com"
-              startTime: "2025-03-15T09:00:00Z"
-              endTime: "2025-03-15T10:00:00Z"
-              status: "scheduled"
-      responses:
-        '201':
-          description: Registration created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Registration'
-              example:
-                id: "REG12345"
-                eventId: "W12345"
-                userId: "12345"
-                inviteeEmail: "jaan.tamm@example.com"
-                startTime: "2025-03-15T09:00:00Z"
-                endTime: "2025-03-15T10:00:00Z"
-                status: "scheduled"
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid input. Event ID, user ID, and invitee email are required."
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-    get:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Registrations
-      summary: List all registrations
-      description: Retrieve a list of all registrations.
-      responses:
-        '200':
-          description: List of registrations retrieved successfully
+          description: Registreeringute nimekiri edukalt tagastatud
           content:
             application/json:
               schema:
@@ -1041,37 +113,28 @@ paths:
                   endTime: "2025-03-16T15:30:00Z"
                   status: "scheduled"
         '401':
-          description: Unauthorized
+          description: Autoriseerimata
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Authentication required. Please provide a valid token."
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
-
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
   /registrations/{registrationId}:
     patch:
       security:
         - BearerAuth: [ ]
       tags:
-        - Registrations
-      summary: Partially update a registration
-      description: Update specific fields of a registration by its ID.
+        - Registreerimised
+      summary: Registreeringu osaline uuendamine
+      description: Uuendab konkreetse registreeringu välju ID järgi.
       parameters:
         - name: registrationId
           in: path
           required: true
           schema:
             type: string
-          description: The ID of the registration to update.
+          description: Registreeringu ID, mida soovitakse uuendada.
           example: "REG12345"
       requestBody:
         required: true
@@ -1085,7 +148,7 @@ paths:
               status: "rescheduled"
       responses:
         '200':
-          description: Registration updated successfully
+          description: Registreering edukalt uuendatud
           content:
             application/json:
               schema:
@@ -1099,34 +162,1011 @@ paths:
                 endTime: "2025-03-17T11:00:00Z"
                 status: "rescheduled"
         '400':
-          description: Invalid input
+          description: Vigane sisend
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Invalid input. Date format is incorrect."
+                message: "Vigane sisend. Kuupäeva formaat on vale."
         '401':
-          description: Unauthorized
+          description: Autoriseerimata
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Authentication required. Please provide a valid token."
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
         '404':
-          description: Registration not found
+          description: Registreeringut ei leitud
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Registration with ID REG12345 not found."
+                message: "ID-ga REG12345 registreeringut ei leitud."
+    delete:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Registreerimised
+      summary: Registreeringu kustutamine
+      description: Kustutab konkreetse registreeringu ID järgi.
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Registreeringu ID, mida soovitakse kustutada.
+          example: "REG12345"
+      responses:
+        '204':
+          description: Registreering edukalt kustutatud
+        '404':
+          description: Registreeringut ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "ID-ga REG12345 registreeringut ei leitud."
+    get:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Registreerimised
+      summary: Registreeringu andmete vaatamine
+      description: Tagastab konkreetse registreeringu andmed ID järgi.
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Registreeringu ID, mille andmeid soovitakse vaadata.
+          example: "REG12345"
+      responses:
+        '200':
+          description: Registreeringu andmed edukalt tagastatud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+              example:
+                id: "REG12345"
+                eventId: "W12345"
+                userId: "12345"
+                inviteeEmail: "jaan.tamm@example.com"
+                startTime: "2025-03-15T09:00:00Z"
+                endTime: "2025-03-15T10:00:00Z"
+                status: "scheduled"
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '404':
+          description: Registreeringut ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "ID-ga REG12345 registreeringut ei leitud."
         '500':
-          description: Internal server error
+          description: Serveri sisemine viga
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Internal server error. Please try again later."
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+    post:
+      tags:
+        - Treenijad
+      summary: Uue treenija loomine
+      description: Loob uue treenija nime, e-posti, parooli ja valikulise ajavööndiga.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Trainee'
+            example:
+              name: "Jaan Tamm"
+              email: "jaan.tamm@example.com"
+              password: "turvalisParool123"
+              timezone: "Europe/Tallinn"
+      responses:
+        '201':
+          description: Treenija edukalt loodud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trainee'
+              example:
+                id: "12345"
+                name: "Jaan Tamm"
+                email: "jaan.tamm@example.com"
+                timezone: "Europe/Tallinn"
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '400':
+          description: Vigane sisend
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Vigane sisend. E-posti aadress on juba kasutusel või kohustuslikud väljad on puudu."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+
+  /trainees/{traineeId}:
+    get:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Treenijad
+      summary: Treenija andmete vaatamine
+      description: Tagastab konkreetse treenija andmed ID järgi.
+      parameters:
+        - name: traineeId
+          in: path
+          required: true
+          schema:
+            type: string
+          responses:
+        '204':
+          description: Rutiin edukalt kustutatud
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '404':
+          description: Rutiini ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "ID-ga 12345 treenija rutiini ei leitud."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+
+  /registrations:
+    post:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Registreerimised
+      responses:
+        '201':
+          description: Registreering edukalt loodud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+              example:
+                id: "REG12345"
+                eventId: "W12345"
+                userId: "12345"
+                inviteeEmail: "jaan.tamm@example.com"
+                startTime: "2025-03-15T09:00:00Z"
+                endTime: "2025-03-15T10:00:00Z"
+                status: "scheduled"
+        '400':
+          description: Vigane sisend
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Vigane sisend. Treeningu ID, kasutaja ID ja meiliaadress on kohustuslikud."
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti." kelle andmeid soovitakse vaadata.
+          example: "12345"
+      responses:
+        '200':
+          description: Treenija andmed edukalt tagastatud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trainee'
+              example:
+                id: "12345"
+                name: "Jaan Tamm"
+                email: "jaan.tamm@example.com"
+                timezone: "Europe/Tallinn"
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '404':
+          description: Treenijat ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "ID-ga 12345 treenijat ei leitud."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+    patch:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Treenijad
+      summary: Treenija andmete osaline uuendamine
+      description: Uuendab konkreetse treenija välju ID järgi.
+      parameters:
+        - name: traineeId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Treenija ID, kelle andmeid soovitakse uuendada.
+          example: "12345"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TraineePatch'
+            example:
+              name: "Jaan Kuusk"
+              timezone: "Europe/Helsinki"
+      responses:
+        '200':
+          description: Treenija andmed edukalt uuendatud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trainee'
+              example:
+                id: "12345"
+                name: "Jaan Kuusk"
+                email: "jaan.tamm@example.com"
+                timezone: "Europe/Helsinki"
+        '400':
+          description: Vigane sisend
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Vigane sisend. E-posti aadress on vale formaadiga."
+        '404':
+          description: Treenijat ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "ID-ga 12345 treenijat ei leitud."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+    delete:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Treenijad
+      summary: Treenija kustutamine
+      description: Kustutab konkreetse treenija ID järgi.
+      parameters:
+        - name: traineeId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Treenija ID, keda soovitakse kustutada.
+          example: "12345"
+      responses:
+        '204':
+          description: Treenija edukalt kustutatud
+        '404':
+          description: Treenijat ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "ID-ga 12345 treenijat ei leitud."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+
+  /sessions:
+    post:
+      tags:
+        - Autentimine
+      summary: Seansi loomine (sisselogimine)
+      description: Autendib treenija ja loob seansi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - email
+                - password
+            example:
+              email: "jaan.tamm@example.com"
+              password: "turvalisParool123"
+      responses:
+        '200':
+          description: Sisselogimine õnnestus
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authenticated:
+                    type: boolean
+                  trainee:
+                    $ref: '#/components/schemas/Trainee'
+                  token:
+                    type: string
+              example:
+                authenticated: true
+                trainee:
+                  id: "12345"
+                  name: "Jaan Tamm"
+                  email: "jaan.tamm@example.com"
+                  timezone: "Europe/Tallinn"
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '400':
+          description: E-post või parool puudub
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "E-post ja parool on kohustuslikud."
+        '401':
+          description: Vigased sisselogimisandmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Vale e-post või parool."
+        '500':
+          description: Serveri viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+
+    delete:
+      tags:
+        - Autentimine
+      summary: Seansi lõpetamine (väljalogimine)
+      description: Lõpetab treenija seansi
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Väljalogimine õnnestus
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Väljalogimine õnnestus."
+        '500':
+          description: Serveri viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+
+    get:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Autentimine
+      summary: Seansi kontrollimine
+      description: Kontrollib, kas treenija on autenditud
+      responses:
+        '200':
+          description: Seansi olek
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authenticated:
+                    type: boolean
+                  trainee:
+                    $ref: '#/components/schemas/Trainee'
+              example:
+                authenticated: true
+                trainee:
+                  id: "12345"
+                  name: "Jaan Tamm"
+                  email: "jaan.tamm@example.com"
+                  timezone: "Europe/Tallinn"
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+
+  /workouts:
+    post:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Treeningud
+      summary: Uue treeningtüübi loomine
+      description: Loob uue treeningtüübi nime, kestuse ja valikuliste andmetega.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkoutType'
+            example:
+              name: "HIIT Treening"
+              duration: 60
+              description: "Kõrge intensiivsusega intervalltreening"
+              color: "#FF5733"
+      responses:
+        '201':
+          description: Treeningtüüp edukalt loodud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutType'
+              example:
+                id: "W12345"
+                name: "HIIT Treening"
+                duration: 60
+                description: "Kõrge intensiivsusega intervalltreening"
+                color: "#FF5733"
+        '400':
+          description: Vigane sisend
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Vigane sisend. Nimi ja kestus on kohustuslikud."
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+
+    get:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Treeningud
+      summary: Kõigi treeningute nimekiri
+      description: Tagastab nimekirja kõigist treeningtüüpidest.
+      responses:
+        '200':
+          description: Treeningute nimekiri edukalt tagastatud
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workout'
+              example:
+                - id: "W12345"
+                  name: "HIIT Treening"
+                  duration: 60
+                  description: "Kõrge intensiivsusega intervalltreening"
+                  color: "#FF5733"
+                - id: "W67890"
+                  name: "Jooga"
+                  duration: 90
+                  description: "Lõõgastav jooga sessioon"
+                  color: "#33FFBD"
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+
+  /workouts/{workoutId}:
+    get:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Treeningud
+      summary: Treeningu andmete vaatamine
+      description: Tagastab konkreetse treeningu andmed ID järgi.
+      parameters:
+        - name: workoutId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Treeningu ID, mille andmeid soovitakse vaadata.
+          example: "W12345"
+      responses:
+        '200':
+          description: Treening leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workout'
+              example:
+                id: "W12345"
+                name: "HIIT Treening"
+                duration: 60
+                description: "Kõrge intensiivsusega intervalltreening"
+                color: "#FF5733"
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '404':
+          description: Treeningut ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "ID-ga W12345 treeningut ei leitud."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+    patch:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Treeningud
+      summary: Treeningu andmete osaline uuendamine
+      description: Uuendab konkreetse treeningu välju ID järgi.
+      parameters:
+        - name: workoutId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Treeningu ID, mille andmeid soovitakse uuendada.
+          example: "W12345"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkoutPatch'
+            example:
+              name: "Edasijõudnute HIIT Treening"
+              duration: 75
+              color: "#FF0000"
+      responses:
+        '200':
+          description: Treeningu andmed edukalt uuendatud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutType'
+              example:
+                id: "W12345"
+                name: "Edasijõudnute HIIT Treening"
+                duration: 75
+                description: "Kõrge intensiivsusega intervalltreening"
+                color: "#FF0000"
+        '400':
+          description: Vigane sisend
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Vigane sisend. Kestus peab olema positiivne täisarv."
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '404':
+          description: Treeningut ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "ID-ga W12345 treeningut ei leitud."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+    delete:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Treeningud
+      summary: Treeningu kustutamine
+      description: Kustutab konkreetse treeningu ID järgi.
+      parameters:
+        - name: workoutId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Treeningu ID, mida soovitakse kustutada.
+          example: "W12345"
+      responses:
+        '204':
+          description: Treening edukalt kustutatud
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '404':
+          description: Treeningut ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "ID-ga W12345 treeningut ei leitud."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+
+  /routines:
+    post:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Rutiinid
+      summary: Uue rutiini loomine
+      description: Loob uue rutiini treenijale koos tema saadavusajaga.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoutineInput'
+            example:
+              userId: "12345"
+              availability:
+                - day: "monday"
+                  startTime: "08:00"
+                  endTime: "10:00"
+                - day: "wednesday"
+                  startTime: "17:00"
+                  endTime: "19:00"
+                - day: "friday"
+                  startTime: "16:00"
+                  endTime: "18:00"
+      responses:
+        '201':
+          description: Rutiin edukalt loodud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Routine'
+              example:
+                id: "R12345"
+                userId: "12345"
+                availability:
+                  - day: "monday"
+                    startTime: "08:00"
+                    endTime: "10:00"
+                  - day: "wednesday"
+                    startTime: "17:00"
+                    endTime: "19:00"
+                  - day: "friday"
+                    startTime: "16:00"
+                    endTime: "18:00"
+        '400':
+          description: Vigane sisend
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Vigane sisend. Kasutaja ID ja saadavusaeg on kohustuslikud."
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+
+    get:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Rutiinid
+      summary: Kõigi rutiinide nimekiri või filtreerimine treenija järgi
+      description: Tagastab nimekirja kõigist rutiinidest või filtreerib konkreetse treenija ID järgi.
+      parameters:
+        - name: traineeId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Treenija ID, kelle rutiine soovitakse vaadata.
+          example: "12345"
+      responses:
+        '200':
+          description: Rutiinide nimekiri edukalt tagastatud
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Routine'
+              example:
+                - id: "R12345"
+                  userId: "12345"
+                  availability:
+                    - day: "monday"
+                      startTime: "08:00"
+                      endTime: "10:00"
+                    - day: "wednesday"
+                      startTime: "17:00"
+                      endTime: "19:00"
+                    - day: "friday"
+                      startTime: "16:00"
+                      endTime: "18:00"
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '404':
+          description: Määratud treenija ID-le rutiine ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "ID-ga 12345 treenijale rutiine ei leitud."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+
+  /routines/{traineeId}:
+    patch:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Rutiinid
+      summary: Treenija rutiini osaline uuendamine
+      description: Uuendab konkreetse treenija rutiini välju treenija ID järgi.
+      parameters:
+        - name: traineeId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Treenija ID, kelle rutiini soovitakse uuendada.
+          example: "12345"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoutinePatch'
+            example:
+              availability:
+                - day: "monday"
+                  startTime: "09:00"
+                  endTime: "11:00"
+                - day: "thursday"
+                  startTime: "18:00"
+                  endTime: "20:00"
+                - day: "saturday"
+                  startTime: "10:00"
+                  endTime: "12:00"
+      responses:
+        '200':
+          description: Rutiin edukalt uuendatud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Routine'
+              example:
+                id: "R12345"
+                userId: "12345"
+                availability:
+                  - day: "monday"
+                    startTime: "09:00"
+                    endTime: "11:00"
+                  - day: "thursday"
+                    startTime: "18:00"
+                    endTime: "20:00"
+                  - day: "saturday"
+                    startTime: "10:00"
+                    endTime: "12:00"
+        '400':
+          description: Vigane sisend
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Vigane sisend. Saadavusaja formaat on vale."
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '404':
+          description: Rutiini ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "ID-ga 12345 treenija rutiini ei leitud."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+    delete:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Rutiinid
+      summary: Rutiini kustutamine
+      description: Kustutab konkreetse treenija rutiini treenija ID järgi.
+      parameters:
+        - name: traineeId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Treenija ID,

@@ -10,8 +10,8 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 
 // Load the OpenAPI specification
-const openapiDocument = yaml.load(path.join(__dirname, 'openapi.yaml'));
-
+const openapiDocumentEn = yaml.load(path.join(__dirname, 'openapi.yaml'));
+const openapiDocumentEt = yaml.load(path.join(__dirname, 'openapi-et.yaml'));
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -32,8 +32,8 @@ app.use(cors());
 app.use(express.json());
 
 // Swagger UI endpoint
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
-
+app.use('/en', swaggerUi.serve, swaggerUi.setup(openapiDocumentEn));
+app.use('/et', swaggerUi.serve, swaggerUi.setup(openapiDocumentEt));
 app.get('/', (req, res) => {
     res.send('Tere tulemast Gym Training Registration API-sse!');
 });
