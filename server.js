@@ -32,8 +32,8 @@ app.use(cors());
 app.use(express.json());
 
 // Swagger UI endpoint
-app.use('/en', swaggerUi.serve, swaggerUi.setup(openapiDocumentEn));
-app.use('/et', swaggerUi.serve, swaggerUi.setup(openapiDocumentEt));
+app.use('/api-docs-en', swaggerUi.serve, swaggerUi.setup(openapiDocumentEn));
+app.use('/api-docs-et', swaggerUi.serve, swaggerUi.setup(openapiDocumentEt));
 app.get('/', (req, res) => {
     res.send('Tere tulemast Gym Training Registration API-sse!');
 });
