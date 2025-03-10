@@ -6,7 +6,8 @@ info:
 servers:
   - url: http://localhost:3000/docs/et
     description: Kohalik arendusserver (eesti keeles)
-
+  - url: http://localhost:3000/api-docs
+    description: Local Development Server (inglise keeles)
 
 paths:
   /trainees:
@@ -73,6 +74,58 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "Vigased lehekülje parameetrid. Lehekülg peab olema vähemalt 1 ja lehekülje suurus vahemikus 1 kuni 100."
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+  /registrations:
+    post:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Registreerimised
+      summary: Treeningule registreerimine
+      description: Loob uue registreeringu treenijale treeningsessiooniks.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Registration'
+            example:
+              eventId: "W12345"
+              userId: "12345"
+              inviteeEmail: "jaan.tamm@example.com"
+              startTime: "2025-03-15T09:00:00Z"
+              endTime: "2025-03-15T10:00:00Z"
+              status: "scheduled"
+      responses:
+        '201':
+          description: Registreering edukalt loodud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+              example:
+                id: "REG12345"
+                eventId: "W12345"
+                userId: "12345"
+                inviteeEmail: "jaan.tamm@example.com"
+                startTime: "2025-03-15T09:00:00Z"
+                endTime: "2025-03-15T10:00:00Z"
+                status: "scheduled"
+        '400':
+          description: Vigane sisend
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Vigane sisend. Treeningu ID, kasutaja ID ja meiliaadress on kohustuslikud."
         '401':
           description: Autoriseerimata
           content:
@@ -257,14 +310,273 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "ID-ga REG12345 registreeringut ei leitud."
-        '500':
-          description: Serveri sisemine viga
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+      description: JWT-põhine autentimine
+
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: Lehekülje number
+        pageSize:
+          type: integer
+          minimum: 1
+          description: Elementide arv leheküljel
+        total:
+          type: integer
+          minimum: 0
+          description: Elementide koguarv
+      required:
+        - page
+        - pageSize
+        - total
+
+    Trainee:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Treenija unikaalne identifikaator
+        name:
+          type: string
+          description: Treenija nimi
+        email:
+          type: string
+          description: Treenija e-posti aadress
+        password:
+          type: string
+          description: Treenija parool (hashitakse serveris)
+        timezone:
+          type: string
+          description: Treenija ajavöönd
+        token:
+          type: string
+          description: Autentimise luba (valikuline)
+      required:
+        - id
+        - name
+        - email
+        - password
+
+    TraineePatch:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Treenija uus nimi
+        email:
+          type: string
+          description: Treenija uus e-posti aadress
+        password:
+          type: string
+          description: Treenija uus parool
+        timezone:
+          type: string
+          description: Treenija uus ajavöönd
+      minProperties: 1  # Vähemalt üks väli peab olema määratud
+
+    WorkoutType:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Treeningu unikaalne identifikaator
+        name:
+          type: string
+          description: Treeningu nimetus
+        duration:
+          type: integer
+          description: Treeningu kestus minutites
+        description:
+          type: string
+          description: Treeningu kirjeldus
+        color:
+          type: string
+          description: Treeningu värv kalendris (hex kood)
+      required:
+        - name
+        - duration
+
+    Workout:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Treeningu unikaalne identifikaator
+        name:
+          type: string
+          description: Treeningu nimetus
+        duration:
+          type: integer
+          description: Treeningu kestus minutites
+        description:
+          type: string
+          description: Treeningu kirjeldus
+        color:
+          type: string
+          description: Treeningu värv kalendris (hex kood)
+      required:
+        - id
+        - name
+        - duration
+
+    WorkoutPatch:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Treeningu uus nimetus
+        duration:
+          type: integer
+          description: Treeningu uus kestus minutites
+        description:
+          type: string
+          description: Treeningu uus kirjeldus
+        color:
+          type: string
+          description: Treeningu uus värv kalendris
+      minProperties: 1  # Vähemalt üks väli peab olema määratud
+
+    Routine:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Rutiini unikaalne identifikaator
+        userId:
+          type: string
+          description: Treenija ID, kellele rutiin kuulub
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlot'
+          description: Treenija saadavusajad
+      required:
+        - id
+        - userId
+        - availability
+
+    RoutineInput:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: Treenija ID, kellele rutiin luuakse
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlot'
+          description: Treenija saadavusajad
+      required:
+        - userId
+        - availability
+
+    RoutinePatch:
+      type: object
+      properties:
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlot'
+          description: Treenija uued saadavusajad
+      minProperties: 1  # Vähemalt üks väli peab olema määratud
+
+    TimeSlot:
+      type: object
+      properties:
+        day:
+          type: string
+          enum: [ monday, tuesday, wednesday, thursday, friday, saturday, sunday ]
+          description: Nädalapäev (ingliskeelne)
+        startTime:
+          type: string
+          format: time
+          description: Algusaeg (HH:MM)
+        endTime:
+          type: string
+          format: time
+          description: Lõppaeg (HH:MM)
+      required:
+        - day
+        - startTime
+        - endTime
+
+    Registration:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Registreeringu unikaalne identifikaator
+        eventId:
+          type: string
+          description: Treeningu ID
+        userId:
+          type: string
+          description: Treenija ID
+        inviteeEmail:
+          type: string
+          description: Treenija e-posti aadress
+        startTime:
+          type: string
+          format: date-time
+          description: Treeningu algusaeg
+        endTime:
+          type: string
+          format: date-time
+          description: Treeningu lõppaeg
+        status:
+          type: string
+          enum: [ scheduled, canceled, completed, rescheduled ]
+          description: Registreeringu olek
+      required:
+        - eventId
+        - userId
+        - inviteeEmail
+        - startTime
+
+    RegistrationPatch:
+      type: object
+      properties:
+        eventId:
+          type: string
+          description: Uus treeningu ID
+        userId:
+          type: string
+          description: Uus treenija ID
+        inviteeEmail:
+          type: string
+          description: Uus treenija e-posti aadress
+        startTime:
+          type: string
+          format: date-time
+          description: Uus treeningu algusaeg
+        endTime:
+          type: string
+          format: date-time
+          description: Uus treeningu lõppaeg
+        status:
+          type: string
+          enum: [scheduled, canceled, completed, rescheduled]
+          description: Uus registreeringu olek
+      minProperties: 1  # Vähemalt üks väli peab olema määratud
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Veateade, mis kirjeldab tekkinud probleemi
+          example: "Päring ebaõnnestus"
+      required:
+        - message
     post:
       tags:
         - Treenijad
@@ -325,79 +637,7 @@ paths:
           required: true
           schema:
             type: string
-          responses:
-        '204':
-          description: Rutiin edukalt kustutatud
-        '401':
-          description: Autoriseerimata
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
-        '404':
-          description: Rutiini ei leitud
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "ID-ga 12345 treenija rutiini ei leitud."
-        '500':
-          description: Serveri sisemine viga
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."
-
-  /registrations:
-    post:
-      security:
-        - BearerAuth: [ ]
-      tags:
-        - Registreerimised
-      responses:
-        '201':
-          description: Registreering edukalt loodud
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Registration'
-              example:
-                id: "REG12345"
-                eventId: "W12345"
-                userId: "12345"
-                inviteeEmail: "jaan.tamm@example.com"
-                startTime: "2025-03-15T09:00:00Z"
-                endTime: "2025-03-15T10:00:00Z"
-                status: "scheduled"
-        '400':
-          description: Vigane sisend
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Vigane sisend. Treeningu ID, kasutaja ID ja meiliaadress on kohustuslikud."
-        '401':
-          description: Autoriseerimata
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
-        '500':
-          description: Serveri sisemine viga
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Serveri sisemine viga. Palun proovige hiljem uuesti." kelle andmeid soovitakse vaadata.
+          description: Treenija ID, kelle andmeid soovitakse vaadata.
           example: "12345"
       responses:
         '200':
@@ -501,7 +741,42 @@ paths:
       tags:
         - Treenijad
       summary: Treenija kustutamine
-      description: Kustutab konkreetse treenija ID järgi.
+      description: Kustutab konkreetse treenija rutiini treenija ID järgi.
+      parameters:
+        - name: traineeId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Treenija ID, kelle rutiini soovitakse kustutada.
+          example: "12345"
+      responses:
+        '204':
+          description: Rutiin edukalt kustutatud
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on vajalik. Palun esitage kehtiv luba."
+        '404':
+          description: Rutiini ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "ID-ga 12345 treenija rutiini ei leitud."
+        '500':
+          description: Serveri sisemine viga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Serveri sisemine viga. Palun proovige hiljem uuesti."utab konkreetse treenija ID järgi.
       parameters:
         - name: traineeId
           in: path
@@ -1162,11 +1437,4 @@ paths:
       tags:
         - Rutiinid
       summary: Rutiini kustutamine
-      description: Kustutab konkreetse treenija rutiini treenija ID järgi.
-      parameters:
-        - name: traineeId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Treenija ID,
+      description: Kust

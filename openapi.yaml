@@ -6,8 +6,6 @@ info:
 servers:
   - url: http://localhost:3000/api-docs
     description: Local Development Server
-
-
 paths:
   /trainees:
     get:
@@ -49,20 +47,6 @@ paths:
                       $ref: '#/components/schemas/Trainee'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
-              example:
-                data:
-                  - id: "12345"
-                    name: "Jaan Tamm"
-                    email: "jaan.tamm@example.com"
-                    timezone: "Europe/Tallinn"
-                  - id: "67890"
-                    name: "Mari Kask"
-                    email: "mari.kask@example.com"
-                    timezone: "Europe/Tallinn"
-                pagination:
-                  page: 1
-                  pageSize: 20
-                  total: 2
         '400':
           description: Invalid pagination parameters
           content:
@@ -70,23 +54,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Invalid pagination parameters. Page must be at least 1 and pageSize must be between 1 and 100."
+                message: "Invalid pagination parameters"
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
     post:
       tags:
         - Trainees
@@ -98,11 +78,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Trainee'
-            example:
-              name: "Jaan Tamm"
-              email: "jaan.tamm@example.com"
-              password: "turvalisParool123"
-              timezone: "Europe/Tallinn"
       responses:
         '201':
           description: Trainee created successfully
@@ -110,28 +85,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Trainee'
-              example:
-                id: "12345"
-                name: "Jaan Tamm"
-                email: "jaan.tamm@example.com"
-                timezone: "Europe/Tallinn"
-                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         '400':
           description: Invalid input
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid input. Email already exists or required fields are missing."
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
 
   /trainees/{traineeId}:
     get:
@@ -148,7 +113,6 @@ paths:
           schema:
             type: string
           description: The ID of the trainee to retrieve.
-          example: "12345"
       responses:
         '200':
           description: Trainee details retrieved successfully
@@ -156,35 +120,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Trainee'
-              example:
-                id: "12345"
-                name: "Jaan Tamm"
-                email: "jaan.tamm@example.com"
-                timezone: "Europe/Tallinn"
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
         '404':
           description: Trainee not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Trainee with ID 12345 not found."
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
     patch:
       security:
         - BearerAuth: [ ]
@@ -199,16 +152,12 @@ paths:
           schema:
             type: string
           description: The ID of the trainee to update.
-          example: "12345"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/TraineePatch'
-            example:
-              name: "Jaan Kuusk"
-              timezone: "Europe/Helsinki"
       responses:
         '200':
           description: Trainee updated successfully
@@ -216,35 +165,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Trainee'
-              example:
-                id: "12345"
-                name: "Jaan Kuusk"
-                email: "jaan.tamm@example.com"
-                timezone: "Europe/Helsinki"
         '400':
           description: Invalid input
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid input. Email format is incorrect."
         '404':
           description: Trainee not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Trainee with ID 12345 not found."
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
     delete:
       security:
         - BearerAuth: [ ]
@@ -259,7 +197,6 @@ paths:
           schema:
             type: string
           description: The ID of the trainee to delete.
-          example: "12345"
       responses:
         '204':
           description: Trainee deleted successfully
@@ -270,15 +207,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Trainee with ID 12345 not found."
+                message: "Resource not found"
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
 
   /sessions:
     post:
@@ -300,83 +235,26 @@ paths:
               required:
                 - email
                 - password
-            example:
-              email: "jaan.tamm@example.com"
-              password: "turvalisParool123"
       responses:
         '200':
           description: Login successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  authenticated:
-                    type: boolean
-                  trainee:
-                    $ref: '#/components/schemas/Trainee'
-                  token:
-                    type: string
-              example:
-                authenticated: true
-                trainee:
-                  id: "12345"
-                  name: "Jaan Tamm"
-                  email: "jaan.tamm@example.com"
-                  timezone: "Europe/Tallinn"
-                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         '400':
           description: Missing email or password
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Email and password are required."
         '401':
           description: Invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid email or password."
         '500':
           description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
 
     delete:
       tags:
         - Authentication
       summary: Destroy session (logout)
       description: End trainee session
-      security:
-        - BearerAuth: [ ]
       responses:
         '200':
           description: Logout successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-              example:
-                message: "Logout successful."
         '500':
           description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
 
     get:
       security:
@@ -397,29 +275,18 @@ paths:
                     type: boolean
                   trainee:
                     $ref: '#/components/schemas/Trainee'
-              example:
-                authenticated: true
-                trainee:
-                  id: "12345"
-                  name: "Jaan Tamm"
-                  email: "jaan.tamm@example.com"
-                  timezone: "Europe/Tallinn"
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
 
   /workouts:
     post:
@@ -435,11 +302,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/WorkoutType'
-            example:
-              name: "HIIT Training"
-              duration: 60
-              description: "High-intensity interval training"
-              color: "#FF5733"
       responses:
         '201':
           description: Workout type created successfully
@@ -447,12 +309,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkoutType'
-              example:
-                id: "W12345"
-                name: "HIIT Training"
-                duration: 60
-                description: "High-intensity interval training"
-                color: "#FF5733"
         '400':
           description: Invalid input
           content:
@@ -460,23 +316,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Invalid input. Name and duration are required."
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
+                message: "Invalid input"
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
 
     get:
       security:
@@ -494,33 +340,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Workout'
-              example:
-                - id: "W12345"
-                  name: "HIIT Training"
-                  duration: 60
-                  description: "High-intensity interval training"
-                  color: "#FF5733"
-                - id: "W67890"
-                  name: "Yoga"
-                  duration: 90
-                  description: "Relaxing yoga session"
-                  color: "#33FFBD"
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
 
   /workouts/{workoutId}:
     get:
@@ -537,7 +368,6 @@ paths:
           schema:
             type: string
           description: The ID of the workout to retrieve.
-          example: "W12345"
       responses:
         '200':
           description: Workout found
@@ -545,36 +375,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Workout'
-              example:
-                id: "W12345"
-                name: "HIIT Training"
-                duration: 60
-                description: "High-intensity interval training"
-                color: "#FF5733"
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
         '404':
           description: Workout not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Workout with ID W12345 not found."
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
     patch:
       security:
         - BearerAuth: [ ]
@@ -589,17 +407,12 @@ paths:
           schema:
             type: string
           description: The ID of the workout to update.
-          example: "W12345"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/WorkoutPatch'
-            example:
-              name: "Advanced HIIT Training"
-              duration: 75
-              color: "#FF0000"
       responses:
         '200':
           description: Workout updated successfully
@@ -607,44 +420,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkoutType'
-              example:
-                id: "W12345"
-                name: "Advanced HIIT Training"
-                duration: 75
-                description: "High-intensity interval training"
-                color: "#FF0000"
         '400':
           description: Invalid input
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid input. Duration must be a positive integer."
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
         '404':
           description: Workout not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Workout with ID W12345 not found."
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
     delete:
       security:
         - BearerAuth: [ ]
@@ -659,18 +452,9 @@ paths:
           schema:
             type: string
           description: The ID of the workout to delete.
-          example: "W12345"
       responses:
         '204':
           description: Workout deleted successfully
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
         '404':
           description: Workout not found
           content:
@@ -678,15 +462,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Workout with ID W12345 not found."
+                message: "Resource not found"
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
 
   /routines:
     post:
@@ -702,18 +484,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/RoutineInput'
-            example:
-              userId: "12345"
-              availability:
-                - day: "monday"
-                  startTime: "08:00"
-                  endTime: "10:00"
-                - day: "wednesday"
-                  startTime: "17:00"
-                  endTime: "19:00"
-                - day: "friday"
-                  startTime: "16:00"
-                  endTime: "18:00"
       responses:
         '201':
           description: Routine created successfully
@@ -721,19 +491,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Routine'
-              example:
-                id: "R12345"
-                userId: "12345"
-                availability:
-                  - day: "monday"
-                    startTime: "08:00"
-                    endTime: "10:00"
-                  - day: "wednesday"
-                    startTime: "17:00"
-                    endTime: "19:00"
-                  - day: "friday"
-                    startTime: "16:00"
-                    endTime: "18:00"
         '400':
           description: Invalid input
           content:
@@ -741,15 +498,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Invalid input. User ID and availability are required."
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
+                message: "Invalid input"
         '500':
           description: Internal server error
           content:
@@ -757,7 +506,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Internal server error. Please try again later."
+                message: "Internal server error"
 
     get:
       security:
@@ -773,7 +522,6 @@ paths:
           schema:
             type: string
           description: The ID of the trainee whose routines to retrieve.
-          example: "12345"
       responses:
         '200':
           description: List of routines retrieved successfully
@@ -783,45 +531,27 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Routine'
-              example:
-                - id: "R12345"
-                  userId: "12345"
-                  availability:
-                    - day: "monday"
-                      startTime: "08:00"
-                      endTime: "10:00"
-                    - day: "wednesday"
-                      startTime: "17:00"
-                      endTime: "19:00"
-                    - day: "friday"
-                      startTime: "16:00"
-                      endTime: "18:00"
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
         '404':
           description: No routines found for the given trainee ID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "No routines found for trainee with ID 12345."
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
 
   /routines/{traineeId}:
+
     patch:
       security:
         - BearerAuth: [ ]
@@ -836,24 +566,12 @@ paths:
           schema:
             type: string
           description: The ID of the trainee whose routine to update.
-          example: "12345"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/RoutinePatch'
-            example:
-              availability:
-                - day: "monday"
-                  startTime: "09:00"
-                  endTime: "11:00"
-                - day: "thursday"
-                  startTime: "18:00"
-                  endTime: "20:00"
-                - day: "saturday"
-                  startTime: "10:00"
-                  endTime: "12:00"
       responses:
         '200':
           description: Routine updated successfully
@@ -861,43 +579,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Routine'
-              example:
-                id: "R12345"
-                userId: "12345"
-                availability:
-                  - day: "monday"
-                    startTime: "09:00"
-                    endTime: "11:00"
-                  - day: "thursday"
-                    startTime: "18:00"
-                    endTime: "20:00"
-                  - day: "saturday"
-                    startTime: "10:00"
-                    endTime: "12:00"
         '400':
           description: Invalid input
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid input. Availability format is incorrect."
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
         '404':
           description: Routine not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Routine for trainee with ID 12345 not found."
         '500':
           description: Internal server error
           content:
@@ -905,7 +598,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Internal server error. Please try again later."
+                message: "Internal server error"
     delete:
       security:
         - BearerAuth: [ ]
@@ -920,18 +613,9 @@ paths:
           schema:
             type: string
           description: The ID of the trainee whose routine to delete.
-          example: "12345"
       responses:
         '204':
           description: Routine deleted successfully
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
         '404':
           description: Routine not found
           content:
@@ -939,7 +623,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Routine for trainee with ID 12345 not found."
+                message: "Resource not found"
         '500':
           description: Internal server error
           content:
@@ -947,7 +631,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Internal server error. Please try again later."
+                message: "Internal server error"
 
   /registrations:
     post:
@@ -963,13 +647,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Registration'
-            example:
-              eventId: "W12345"
-              userId: "12345"
-              inviteeEmail: "jaan.tamm@example.com"
-              startTime: "2025-03-15T09:00:00Z"
-              endTime: "2025-03-15T10:00:00Z"
-              status: "scheduled"
       responses:
         '201':
           description: Registration created successfully
@@ -977,14 +654,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Registration'
-              example:
-                id: "REG12345"
-                eventId: "W12345"
-                userId: "12345"
-                inviteeEmail: "jaan.tamm@example.com"
-                startTime: "2025-03-15T09:00:00Z"
-                endTime: "2025-03-15T10:00:00Z"
-                status: "scheduled"
         '400':
           description: Invalid input
           content:
@@ -992,23 +661,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Invalid input. Event ID, user ID, and invitee email are required."
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
+                message: "Invalid input"
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
     get:
       security:
         - BearerAuth: [ ]
@@ -1025,37 +684,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Registration'
-              example:
-                - id: "REG12345"
-                  eventId: "W12345"
-                  userId: "12345"
-                  inviteeEmail: "jaan.tamm@example.com"
-                  startTime: "2025-03-15T09:00:00Z"
-                  endTime: "2025-03-15T10:00:00Z"
-                  status: "scheduled"
-                - id: "REG67890"
-                  eventId: "W67890"
-                  userId: "67890"
-                  inviteeEmail: "mari.kask@example.com"
-                  startTime: "2025-03-16T14:00:00Z"
-                  endTime: "2025-03-16T15:30:00Z"
-                  status: "scheduled"
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
 
   /registrations/{registrationId}:
     patch:
@@ -1072,17 +712,12 @@ paths:
           schema:
             type: string
           description: The ID of the registration to update.
-          example: "REG12345"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/RegistrationPatch'
-            example:
-              startTime: "2025-03-17T10:00:00Z"
-              endTime: "2025-03-17T11:00:00Z"
-              status: "rescheduled"
       responses:
         '200':
           description: Registration updated successfully
@@ -1090,30 +725,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Registration'
-              example:
-                id: "REG12345"
-                eventId: "W12345"
-                userId: "12345"
-                inviteeEmail: "jaan.tamm@example.com"
-                startTime: "2025-03-17T10:00:00Z"
-                endTime: "2025-03-17T11:00:00Z"
-                status: "rescheduled"
         '400':
           description: Invalid input
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Invalid input. Date format is incorrect."
-        '401':
-          description: Unauthorized
+        '404':
+          description: Registration not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication required. Please provide a valid token."
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Registrations
+      summary: Delete a registration
+      description: Delete a specific registration by its ID.
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the registration to delete.
+      responses:
+        '204':
+          description: Registration deleted successfully
         '404':
           description: Registration not found
           content:
@@ -1121,12 +767,263 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: "Registration with ID REG12345 not found."
+                message: "Resource not found"
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Internal server error. Please try again later."
+    get:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Registrations
+      summary: Get registration details
+      description: Retrieve details of a specific registration by its ID.
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the registration to retrieve.
+      responses:
+        '200':
+          description: Registration details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Registration not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+      required:
+        - page
+        - pageSize
+        - total
+
+    Trainee:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        timezone:
+          type: string
+        token:
+          type: string  # Token is optional
+      required:
+        - id
+        - name
+        - email
+        - password
+
+    TraineePatch:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        timezone:
+          type: string
+      minProperties: 1  # At least one field must be provided
+
+    WorkoutType:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        duration:
+          type: integer
+        description:
+          type: string
+        color:
+          type: string
+      required:
+        - name
+        - duration
+
+    Workout:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        duration:
+          type: integer
+        description:
+          type: string
+        color:
+          type: string
+      required:
+        - id
+        - name
+        - duration
+
+    WorkoutPatch:
+      type: object
+      properties:
+        name:
+          type: string
+        duration:
+          type: integer
+        description:
+          type: string
+        color:
+          type: string
+      minProperties: 1  # At least one field must be provided
+
+    Routine:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlot'
+      required:
+        - id
+        - userId
+        - availability
+
+    RoutineInput:
+      type: object
+      properties:
+        userId:
+          type: string
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlot'
+      required:
+        - userId
+        - availability
+
+    RoutinePatch:
+      type: object
+      properties:
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlot'
+      minProperties: 1  # At least one field must be provided
+
+    TimeSlot:
+      type: object
+      properties:
+        day:
+          type: string
+          enum: [ monday, tuesday, wednesday, thursday, friday, saturday, sunday ]
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+      required:
+        - day
+        - startTime
+        - endTime
+
+    Registration:
+      type: object
+      properties:
+        id:
+          type: string
+        eventId:
+          type: string
+        userId:
+          type: string
+        inviteeEmail:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [ scheduled, canceled, completed ]
+      required:
+        - eventId
+        - userId
+        - inviteeEmail
+        - startTime
+
+    RegistrationPatch:
+      type: object
+      properties:
+        eventId:
+          type: string
+        userId:
+          type: string
+        inviteeEmail:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+      minProperties: 1
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Bad Request"
+      required:
+        - message
