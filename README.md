@@ -50,9 +50,9 @@ npm (Node Package Manager)
 
 4. **Open** the Swagger UI in your browser:
 ```bash
-   http://localhost:3000/api-docs
+   http://localhost:3000/api-docs-en
 ```
 ## How It Works
 1. Swagger Documentation:
 
-You can view the full API documentation at http://localhost:3000/api-docs. 
+You can view the full API documentation at https://docs.sanderprii.me/en/. 

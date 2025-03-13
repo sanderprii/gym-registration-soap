@@ -8,6 +8,7 @@ const yaml = require('yamljs');
 const path = require('path');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 // Load the OpenAPI specification
 const openapiDocumentEn = yaml.load(path.join(__dirname, 'openapi.yaml'));
@@ -16,7 +17,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // For demo purposes only; in production, store secrets in env variables
-const JWT_SECRET = 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // In-memory data stores
 let trainees = [];       // For /trainees
@@ -30,10 +31,18 @@ const revokedTokens = new Set();
 // Middleware
 app.use(cors());
 app.use(express.json());
+// Looge eraldi Swagger UI funktsioonid
+function setupSwaggerEn(req, res, next) {
+    return swaggerUi.setup(openapiDocumentEn)(req, res, next);
+}
 
-// Swagger UI endpoint
-app.use('/api-docs-en', swaggerUi.serve, swaggerUi.setup(openapiDocumentEn));
-app.use('/api-docs-et', swaggerUi.serve, swaggerUi.setup(openapiDocumentEt));
+function setupSwaggerEt(req, res, next) {
+    return swaggerUi.setup(openapiDocumentEt)(req, res, next);
+}
+
+// Kasutage eraldi setup funktsioone
+app.use('/api-docs-en', swaggerUi.serve, setupSwaggerEn);
+app.use('/api-docs-et', swaggerUi.serve, setupSwaggerEt);
 app.get('/', (req, res) => {
     res.send('Tere tulemast Gym Training Registration API-sse!');
 });
