@@ -338,7 +338,7 @@ app.post('/routines', authenticateToken, (req, res) => {
 });
 
 // Get a specific trainee's routine
-app.get('/routines/:traineeId', authenticateToken, (req, res) => {
+app.get('/routines/trainee/:traineeId', authenticateToken, (req, res) => {
     const { traineeId } = req.params;
     const routine = routines.find((r) => r.userId === traineeId);
 
@@ -350,7 +350,7 @@ app.get('/routines/:traineeId', authenticateToken, (req, res) => {
 });
 
 // Partially update a trainee's routine
-app.patch('/routines/:traineeId', authenticateToken, (req, res) => {
+app.patch('/routines/trainee/:traineeId', authenticateToken, (req, res) => {
     const { traineeId } = req.params;
     const { availability } = req.body;
 
@@ -368,7 +368,7 @@ app.patch('/routines/:traineeId', authenticateToken, (req, res) => {
 });
 
 // Delete a routine
-app.delete('/routines/:traineeId', authenticateToken, (req, res) => {
+app.delete('/routines/trainee/:traineeId', authenticateToken, (req, res) => {
     const { traineeId } = req.params;
     const routineIndex = routines.findIndex((r) => r.userId === traineeId);
 
@@ -468,5 +468,5 @@ app.delete('/registrations/:registrationId', authenticateToken, (req, res) => {
 // ---------------------------------------------------------------------------
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
-    console.log(`Swagger UI available at http://localhost:${port}/api-docs`);
+    console.log(`Swagger UI available at http://localhost:${port}/api-docs-en`);
 });
