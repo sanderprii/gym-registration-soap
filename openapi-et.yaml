@@ -410,6 +410,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "Vigane sisend"
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Serveri sisemine viga
           content:
@@ -839,6 +845,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "Vigane sisend"
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Serveri sisemine viga
           content:
@@ -918,6 +930,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Registreerimist ei leitud
           content:
@@ -947,6 +965,12 @@ paths:
       responses:
         '204':
           description: Registreering edukalt kustutatud
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Registreerimist ei leitud
           content:
