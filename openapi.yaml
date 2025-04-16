@@ -225,7 +225,12 @@ paths:
       responses:
         '204':
           description: Trainee deleted successfully
-
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Trainee not found
           content:
