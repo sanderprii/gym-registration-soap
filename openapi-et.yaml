@@ -190,6 +190,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
         '404':
           description: Treenijat ei leitud
           content:
@@ -219,6 +220,12 @@ paths:
       responses:
         '204':
           description: Treenija edukalt kustutatud
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Treenijat ei leitud
           content:
