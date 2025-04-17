@@ -101,6 +101,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "E-posti aadress on juba kasutusel"
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Serveri sisemine viga
           content:
@@ -542,6 +548,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Treeningut ei leitud
           content:
@@ -571,6 +583,12 @@ paths:
       responses:
         '204':
           description: Treening edukalt kustutatud
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Treeningut ei leitud
           content:
@@ -630,6 +648,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "Vigane sisend"
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Serveri sisemine viga
           content:
@@ -765,6 +789,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Treeningudrutiini ei leitud
           content:
@@ -796,6 +826,12 @@ paths:
       responses:
         '204':
           description: Treeningudrutiin edukalt kustutatud
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Treeningudrutiini ei leitud
           content:

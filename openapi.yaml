@@ -101,6 +101,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "Email is already in use"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -547,6 +553,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Workout not found
           content:
@@ -576,6 +588,12 @@ paths:
       responses:
         '204':
           description: Workout deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Workout not found
           content:
@@ -635,6 +653,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "Invalid input"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -770,6 +794,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Routine not found
           content:
@@ -801,6 +831,12 @@ paths:
       responses:
         '204':
           description: Routine deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Routine not found
           content:
