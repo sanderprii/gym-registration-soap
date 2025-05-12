@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Trainee {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  timezone  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  routines      Routine[]
+  registrations Registration[]
+
+  @@map("trainees")
+}
+
+model Workout {
+  id          String   @id @default(cuid())
+  name        String
+  duration    Int
+  description String?
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("workouts")
+}
+
+model Routine {
+  id           String   @id @default(cuid())
+  userId       String
+  availability String // Changed from Json to String for SQLite compatibility
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relationships
+  trainee Trainee @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("routines")
+}
+
+model Registration {
+  id           String    @id @default(cuid())
+  eventId      String
+  userId       String
+  inviteeEmail String
+  startTime    DateTime
+  endTime      DateTime?
+  status       String    @default("scheduled")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relationships
+  trainee Trainee @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("registrations")
+}

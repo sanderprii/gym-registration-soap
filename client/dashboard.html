@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Registration - Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+    <nav class="container">
+        <div>
+            <h1>Gym Registration System</h1>
+            <span id="user-info"></span>
+        </div>
+        <ul>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="trainees.html">Trainees</a></li>
+            <li><a href="workouts.html">Workouts</a></li>
+            <li><a href="routines.html">Routines</a></li>
+            <li><a href="registrations.html">Registrations</a></li>
+            <li><a href="#" id="logout-btn">Logout</a></li>
+        </ul>
+    </nav>
+</header>
+
+<div class="container">
+    <h2>Dashboard</h2>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-card">
+            <h3>Trainees</h3>
+            <p>Manage gym members</p>
+            <a href="trainees.html" class="btn">View Trainees</a>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Workouts</h3>
+            <p>Manage workout types</p>
+            <a href="workouts.html" class="btn">View Workouts</a>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Routines</h3>
+            <p>Manage training schedules</p>
+            <a href="routines.html" class="btn">View Routines</a>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Registrations</h3>
+            <p>Manage workout registrations</p>
+            <a href="registrations.html" class="btn">View Registrations</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Recent Statistics</h3>
+        <div id="stats-content">
+            <div class="spinner"></div>
+        </div>
+    </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

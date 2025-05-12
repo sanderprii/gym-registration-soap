@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trainees - Gym Registration</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+    <nav class="container">
+        <div>
+            <h1>Gym Registration System</h1>
+            <span id="user-info"></span>
+        </div>
+        <ul>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="trainees.html" class="active">Trainees</a></li>
+            <li><a href="workouts.html">Workouts</a></li>
+            <li><a href="routines.html">Routines</a></li>
+            <li><a href="registrations.html">Registrations</a></li>
+            <li><a href="#" id="logout-btn">Logout</a></li>
+        </ul>
+    </nav>
+</header>
+
+<div class="container">
+    <div class="card">
+        <h2>Trainees Management</h2>
+        <button onclick="openCreateModal()" class="btn btn-success">Add New Trainee</button>
+
+        <div id="error-message" class="error-message"></div>
+        <div id="success-message" class="success-message"></div>
+
+        <div class="table-container">
+            <table id="trainees-table">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Timezone</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="trainees-tbody">
+                <tr>
+                    <td colspan="5" class="text-center">
+                        <div class="spinner"></div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="pagination" class="pagination"></div>
+    </div>
+</div>
+
+<!-- Create/Edit Trainee Modal -->
+<div id="trainee-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modal-title">Add New Trainee</h2>
+        <div id="modal-error" class="error-message"></div>
+
+        <form id="trainee-form">
+            <input type="hidden" id="trainee-id">
+
+            <div class="form-group">
+                <label for="trainee-name">Name:</label>
+                <input type="text" id="trainee-name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="trainee-email">Email:</label>
+                <input type="email" id="trainee-email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="trainee-password">Password:</label>
+                <input type="password" id="trainee-password" name="password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="trainee-timezone">Timezone:</label>
+                <input type="text" id="trainee-timezone" name="timezone" placeholder="e.g., Europe/Tallinn">
+            </div>
+
+            <button type="submit" class="btn">Save</button>
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/trainees.js"></script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Registration - Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="login-container">
+    <div class="login-form">
+        <h2>Gym Registration System</h2>
+        <div id="error-message" class="error-message"></div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <button type="submit" class="btn">Login</button>
+        </form>
+
+        <div class="mt-20">
+            <p>Don't have an account? <a href="#" id="register-link">Register here</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- Registration Modal -->
+<div id="register-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Register New Account</h2>
+        <div id="register-error" class="error-message"></div>
+
+        <form id="register-form">
+            <div class="form-group">
+                <label for="reg-name">Name:</label>
+                <input type="text" id="reg-name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="reg-email">Email:</label>
+                <input type="email" id="reg-email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="reg-password">Password:</label>
+                <input type="password" id="reg-password" name="password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="reg-timezone">Timezone:</label>
+                <input type="text" id="reg-timezone" name="timezone" placeholder="e.g., Europe/Tallinn">
+            </div>
+
+            <button type="submit" class="btn">Register</button>
+        </form>
+    </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+
+<script>
+    // Check if already logged in
+    Auth.redirectIfLoggedIn();
+
+    // Login form handler
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('error-message');
+
+        try {
+            const success = await Auth.login(email, password);
+            if (success) {
+                window.location.href = 'dashboard.html';
+            }
+        } catch (error) {
+            errorDiv.textContent = error.message;
+            errorDiv.style.display = 'block';
+        }
+    });
+
+    // Registration modal handlers
+    const registerLink = document.getElementById('register-link');
+    const registerModal = document.getElementById('register-modal');
+    const closeModal = document.querySelector('.close');
+
+    registerLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerModal.style.display = 'block';
+    });
+
+    closeModal.addEventListener('click', () => {
+        registerModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === registerModal) {
+            registerModal.style.display = 'none';
+        }
+    });
+
+    // Registration form handler
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const userData = Object.fromEntries(formData);
+        const errorDiv = document.getElementById('register-error');
+
+        try {
+            await api.createTrainee(userData);
+            alert('Registration successful! Please login with your credentials.');
+            registerModal.style.display = 'none';
+            document.getElementById('register-form').reset();
+        } catch (error) {
+            errorDiv.textContent = error.message;
+            errorDiv.style.display = 'block';
+        }
+    });
+</script>
+</body>
+</html>

@@ -8,7 +8,14 @@ const yaml = require('yamljs');
 const path = require('path');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
+
+// Initialize Prisma client
+const prisma = new PrismaClient();
+
+
 
 // Load the OpenAPI specification
 const openapiDocumentEn = yaml.load(path.join(__dirname, 'openapi.yaml'));
@@ -19,19 +26,14 @@ const port = process.env.PORT || 3000;
 // For demo purposes only; in production, store secrets in env variables
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// In-memory data stores
-let trainees = [];       // For /trainees
-let workouts = [];       // For /workouts
-let routines = [];       // For /routines
-let registrations = [];  // For /registrations
-
-// Track revoked tokens for logout
+// Track revoked tokens for logout (in production use Redis or database)
 const revokedTokens = new Set();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-// Looge eraldi Swagger UI funktsioonid
+
+// Create separate Swagger UI setup functions
 function setupSwaggerEn(req, res, next) {
     return swaggerUi.setup(openapiDocumentEn)(req, res, next);
 }
@@ -40,9 +42,10 @@ function setupSwaggerEt(req, res, next) {
     return swaggerUi.setup(openapiDocumentEt)(req, res, next);
 }
 
-// Kasutage eraldi setup funktsioone
+// Use separate setup functions
 app.use('/api-docs-en', swaggerUi.serve, setupSwaggerEn);
 app.use('/api-docs-et', swaggerUi.serve, setupSwaggerEt);
+
 app.get('/', (req, res) => {
     res.send('Tere tulemast Gym Training Registration API-sse!');
 });
@@ -76,391 +79,712 @@ function authenticateToken(req, res, next) {
 
 // ---------------------------------------------------------------------------
 // /sessions endpoints: login, logout, check session
-// OpenAPI references:
-//   POST /sessions
-//   DELETE /sessions
-//   GET /sessions
 // ---------------------------------------------------------------------------
 
 // Create session (Login)
-app.post('/sessions', (req, res) => {
-    const { email, password } = req.body;
-    const trainee = trainees.find((t) => t.email === email && t.password === password);
+app.post('/sessions', async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-    if (!trainee) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        const trainee = await prisma.trainee.findUnique({
+            where: { email }
+        });
+
+        if (!trainee) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        // In a real application, you should hash passwords. For now, comparing plaintext.
+        // To use hashed passwords: const isValidPassword = await bcrypt.compare(password, trainee.password);
+        if (trainee.password !== password) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        // Create JWT
+        const token = jwt.sign(
+            { traineeId: trainee.id, email: trainee.email },
+            JWT_SECRET,
+            { expiresIn: '2h' }
+        );
+
+        // Remove password from response
+        const { password: _, ...traineeWithoutPassword } = trainee;
+
+        res.status(200).json({
+            token,
+            trainee: traineeWithoutPassword
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    // Create JWT
-    // Payload contains user id, name, etc.
-    const token = jwt.sign(
-        { traineeId: trainee.id, email: trainee.email },
-        JWT_SECRET,
-        { expiresIn: '2h' }
-    );
-
-    res.status(200).json({
-        message: 'Login successful',
-        token
-    });
 });
 
 // Destroy session (Logout)
 app.delete('/sessions', authenticateToken, (req, res) => {
     // Revoke current token
     revokedTokens.add(req.token);
-
-    // In a production environment, you might periodically remove expired tokens
-    // from the revokedTokens set.
-    return res.status(200).json({ message: 'Logout successful' });
+    return res.status(200).json({ message: 'Successfully logged out' });
 });
 
 // Check session (Authenticated?)
-app.get('/sessions', authenticateToken, (req, res) => {
-    // If the token is valid and not revoked, user is authenticated
-    const traineeData = trainees.find(t => t.id === req.user.traineeId);
+app.get('/sessions', authenticateToken, async (req, res) => {
+    try {
+        const trainee = await prisma.trainee.findUnique({
+            where: { id: req.user.traineeId }
+        });
 
-    if (!traineeData) {
-        return res.status(404).json({ error: 'Trainee not found' });
+        if (!trainee) {
+            return res.status(404).json({ error: 'Trainee not found' });
+        }
+
+        // Remove password from response
+        const { password: _, ...traineeWithoutPassword } = trainee;
+
+        return res.status(200).json({
+            authenticated: true,
+            trainee: traineeWithoutPassword
+        });
+    } catch (error) {
+        console.error('Check session error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    return res.status(200).json({
-        authenticated: true,
-        trainee: traineeData
-    });
 });
 
 // ---------------------------------------------------------------------------
 // /trainees endpoints
-// OpenAPI references:
-//   GET /trainees
-//   POST /trainees
-//   GET /trainees/{traineeId}
-//   PATCH /trainees/{traineeId}
-//   DELETE /trainees/{traineeId}
 // ---------------------------------------------------------------------------
 
-// List all trainees
-app.get('/trainees', authenticateToken, (req, res) => {
-    // We never return passwords in a real scenario
-    const safeTrainees = trainees.map(({ password, ...rest }) => rest);
-    res.status(200).json({ data: safeTrainees });
+// List all trainees with pagination
+app.get('/trainees', authenticateToken, async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 20;
+        const skip = (page - 1) * pageSize;
+
+        const [trainees, total] = await prisma.$transaction([
+            prisma.trainee.findMany({
+                skip,
+                take: pageSize,
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    timezone: true,
+                    createdAt: true,
+                    updatedAt: true
+                }
+            }),
+            prisma.trainee.count()
+        ]);
+
+        res.status(200).json({
+            data: trainees,
+            pagination: {
+                page,
+                pageSize,
+                total
+            }
+        });
+    } catch (error) {
+        console.error('List trainees error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Create a new trainee
-app.post('/trainees', (req, res) => {
-    const { name, email, password, timezone } = req.body;
+app.post('/trainees', async (req, res) => {
+    try {
+        const { name, email, password, timezone } = req.body;
 
-    // Basic check if email already used
-    if (trainees.some((t) => t.email === email)) {
-        return res.status(400).json({ error: 'Email already in use' });
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: 'Name, email, and password are required' });
+        }
+
+        // Check if email already exists
+        const existingTrainee = await prisma.trainee.findUnique({
+            where: { email }
+        });
+
+        if (existingTrainee) {
+            return res.status(400).json({ error: 'Email is already in use' });
+        }
+
+        // In a real application, hash the password: const hashedPassword = await bcrypt.hash(password, 10);
+        const newTrainee = await prisma.trainee.create({
+            data: {
+                name,
+                email,
+                password, // Use hashedPassword in production
+                timezone
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                timezone: true,
+                createdAt: true,
+                updatedAt: true
+            }
+        });
+
+        res.status(201).json(newTrainee);
+    } catch (error) {
+        console.error('Create trainee error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    const newTrainee = {
-        id: Date.now().toString(),
-        name,
-        email,
-        password,
-        timezone: timezone || null,
-        createdAt: new Date().toISOString()
-    };
-
-    trainees.push(newTrainee);
-
-    // Return without password
-    const { password: _, ...traineeWithoutPass } = newTrainee;
-    res.status(201).json(traineeWithoutPass);
 });
 
 // Get trainee details
-app.get('/trainees/:traineeId', authenticateToken, (req, res) => {
-    const { traineeId } = req.params;
-    const trainee = trainees.find((t) => t.id === traineeId);
+app.get('/trainees/:traineeId', authenticateToken, async (req, res) => {
+    try {
+        const { traineeId } = req.params;
 
-    if (!trainee) {
-        return res.status(404).json({ error: 'Trainee not found' });
+        const trainee = await prisma.trainee.findUnique({
+            where: { id: traineeId },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                timezone: true,
+                createdAt: true,
+                updatedAt: true
+            }
+        });
+
+        if (!trainee) {
+            return res.status(404).json({ error: 'Trainee not found' });
+        }
+
+        res.status(200).json(trainee);
+    } catch (error) {
+        console.error('Get trainee error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    // Return a "safe" object without password
-    const { password, ...rest } = trainee;
-    res.status(200).json(rest);
 });
 
 // Partially update a trainee
-app.patch('/trainees/:traineeId', authenticateToken, (req, res) => {
-    const { traineeId } = req.params;
-    const { name, email, password, timezone } = req.body;
+app.patch('/trainees/:traineeId', authenticateToken, async (req, res) => {
+    try {
+        const { traineeId } = req.params;
+        const { name, email, password, timezone } = req.body;
 
-    const traineeIndex = trainees.findIndex((t) => t.id === traineeId);
-    if (traineeIndex === -1) {
-        return res.status(404).json({ error: 'Trainee not found' });
+        // Build update object dynamically
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (email !== undefined) updateData.email = email;
+        if (password !== undefined) updateData.password = password; // Hash in production
+        if (timezone !== undefined) updateData.timezone = timezone;
+
+        const updatedTrainee = await prisma.trainee.update({
+            where: { id: traineeId },
+            data: updateData,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                timezone: true,
+                createdAt: true,
+                updatedAt: true
+            }
+        });
+
+        res.status(200).json(updatedTrainee);
+    } catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Trainee not found' });
+        }
+        console.error('Update trainee error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    // Simple partial update
-    if (name !== undefined) trainees[traineeIndex].name = name;
-    if (email !== undefined) trainees[traineeIndex].email = email;
-    if (password !== undefined) trainees[traineeIndex].password = password;
-    if (timezone !== undefined) trainees[traineeIndex].timezone = timezone;
-
-    trainees[traineeIndex].updatedAt = new Date().toISOString();
-
-    // Return a "safe" object without password
-    const { password: removedPass, ...rest } = trainees[traineeIndex];
-    res.status(200).json(rest);
 });
 
 // Delete a trainee
-app.delete('/trainees/:traineeId', authenticateToken, (req, res) => {
-    const { traineeId } = req.params;
-    const idx = trainees.findIndex((t) => t.id === traineeId);
+app.delete('/trainees/:traineeId', authenticateToken, async (req, res) => {
+    try {
+        const { traineeId } = req.params;
 
-    if (idx === -1) {
-        return res.status(404).json({ error: 'Trainee not found' });
+        await prisma.trainee.delete({
+            where: { id: traineeId }
+        });
+
+        res.status(204).send();
+    } catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Resource not found' });
+        }
+        console.error('Delete trainee error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    trainees.splice(idx, 1);
-    res.status(204).send();
 });
 
 // ---------------------------------------------------------------------------
 // /workouts endpoints
-// OpenAPI references:
-//   GET /workouts
-//   POST /workouts
-//   GET /workouts/{workoutId}
-//   PATCH /workouts/{workoutId}
-//   DELETE /workouts/{workoutId}
 // ---------------------------------------------------------------------------
 
 // List all workouts
-app.get('/workouts', authenticateToken, (req, res) => {
-    res.status(200).json(workouts);
+app.get('/workouts', authenticateToken, async (req, res) => {
+    try {
+        const workouts = await prisma.workout.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json(workouts);
+    } catch (error) {
+        console.error('List workouts error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Create a new workout type
-app.post('/workouts', authenticateToken, (req, res) => {
-    const { name, duration, description, color } = req.body;
+app.post('/workouts', authenticateToken, async (req, res) => {
+    try {
+        const { name, duration, description, color } = req.body;
 
-    // Basic validation
-    if (!name || !duration) {
-        return res.status(400).json({ error: 'Invalid input' });
+        if (!name || !duration) {
+            return res.status(400).json({ error: 'Name and duration are required' });
+        }
+
+        const newWorkout = await prisma.workout.create({
+            data: {
+                name,
+                duration,
+                description,
+                color
+            }
+        });
+
+        res.status(201).json(newWorkout);
+    } catch (error) {
+        console.error('Create workout error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    const newWorkout = {
-        id: Date.now().toString(),
-        name,
-        duration,
-        description: description || null,
-        color: color || null,
-        createdAt: new Date().toISOString()
-    };
-
-    workouts.push(newWorkout);
-    res.status(201).json(newWorkout);
 });
 
 // Get workout details
-app.get('/workouts/:workoutId', authenticateToken, (req, res) => {
-    const { workoutId } = req.params;
-    const workout = workouts.find((w) => w.id === workoutId);
+app.get('/workouts/:workoutId', authenticateToken, async (req, res) => {
+    try {
+        const { workoutId } = req.params;
 
-    if (!workout) {
-        return res.status(404).json({ error: 'Workout not found' });
+        const workout = await prisma.workout.findUnique({
+            where: { id: workoutId }
+        });
+
+        if (!workout) {
+            return res.status(404).json({ error: 'Workout not found' });
+        }
+
+        res.status(200).json(workout);
+    } catch (error) {
+        console.error('Get workout error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    res.status(200).json(workout);
 });
 
 // Partially update a workout
-app.patch('/workouts/:workoutId', authenticateToken, (req, res) => {
-    const { workoutId } = req.params;
-    const { name, duration, description, color } = req.body;
+app.patch('/workouts/:workoutId', authenticateToken, async (req, res) => {
+    try {
+        const { workoutId } = req.params;
+        const { name, duration, description, color } = req.body;
 
-    const workoutIndex = workouts.findIndex((w) => w.id === workoutId);
-    if (workoutIndex === -1) {
-        return res.status(404).json({ error: 'Workout not found' });
+        // Build update object dynamically
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (duration !== undefined) updateData.duration = duration;
+        if (description !== undefined) updateData.description = description;
+        if (color !== undefined) updateData.color = color;
+
+        const updatedWorkout = await prisma.workout.update({
+            where: { id: workoutId },
+            data: updateData
+        });
+
+        res.status(200).json(updatedWorkout);
+    } catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Workout not found' });
+        }
+        console.error('Update workout error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    if (name !== undefined) workouts[workoutIndex].name = name;
-    if (duration !== undefined) workouts[workoutIndex].duration = duration;
-    if (description !== undefined) workouts[workoutIndex].description = description;
-    if (color !== undefined) workouts[workoutIndex].color = color;
-    workouts[workoutIndex].updatedAt = new Date().toISOString();
-
-    res.status(200).json(workouts[workoutIndex]);
 });
 
 // Delete a workout
-app.delete('/workouts/:workoutId', authenticateToken, (req, res) => {
-    const { workoutId } = req.params;
-    const index = workouts.findIndex((w) => w.id === workoutId);
+app.delete('/workouts/:workoutId', authenticateToken, async (req, res) => {
+    try {
+        const { workoutId } = req.params;
 
-    if (index === -1) {
-        return res.status(404).json({ error: 'Workout not found' });
+        await prisma.workout.delete({
+            where: { id: workoutId }
+        });
+
+        res.status(204).send();
+    } catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Resource not found' });
+        }
+        console.error('Delete workout error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    workouts.splice(index, 1);
-    res.status(204).send();
 });
 
 // ---------------------------------------------------------------------------
 // /routines endpoints
-// OpenAPI references:
-//   GET /routines
-//   POST /routines
-//   GET /routines/{traineeId}
-//   PATCH /routines/{traineeId}
-//   DELETE /routines/{traineeId}
 // ---------------------------------------------------------------------------
 
 // List all routines
-app.get('/routines', authenticateToken, (req, res) => {
-    res.status(200).json(routines);
+app.get('/routines', authenticateToken, async (req, res) => {
+    try {
+        const { traineeId } = req.query;
+
+        const whereClause = traineeId ? { userId: traineeId } : {};
+
+        const routines = await prisma.routine.findMany({
+            where: whereClause,
+            include: {
+                trainee: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        if (traineeId && routines.length === 0) {
+            return res.status(404).json({ error: 'No routines found for the given trainee ID' });
+        }
+
+        // Parse availability strings to JSON objects for response
+        const parsedRoutines = routines.map(routine => ({
+            ...routine,
+            availability: JSON.parse(routine.availability)
+        }));
+
+        res.status(200).json(parsedRoutines);
+    } catch (error) {
+        console.error('List routines error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Create a new routine
-app.post('/routines', authenticateToken, (req, res) => {
-    const { userId, availability } = req.body;
+app.post('/routines', authenticateToken, async (req, res) => {
+    try {
+        const { userId, availability } = req.body;
 
-    if (!userId || !availability) {
-        return res.status(400).json({ error: 'Invalid input' });
+        if (!userId || !availability) {
+            return res.status(400).json({ error: 'userId and availability are required' });
+        }
+
+        // Check if trainee exists
+        const trainee = await prisma.trainee.findUnique({
+            where: { id: userId }
+        });
+
+        if (!trainee) {
+            return res.status(400).json({ error: 'Trainee not found' });
+        }
+
+        const newRoutine = await prisma.routine.create({
+            data: {
+                userId,
+                availability: JSON.stringify(availability)
+            },
+            include: {
+                trainee: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        // Parse the availability back to object for response
+        newRoutine.availability = JSON.parse(newRoutine.availability);
+
+        res.status(201).json(newRoutine);
+    } catch (error) {
+        console.error('Create routine error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    const newRoutine = {
-        id: Date.now().toString(),
-        userId,
-        availability,
-        createdAt: new Date().toISOString()
-    };
-
-    routines.push(newRoutine);
-    res.status(201).json(newRoutine);
 });
 
 // Get a specific trainee's routine
-app.get('/routines/trainee/:traineeId', authenticateToken, (req, res) => {
-    const { traineeId } = req.params;
-    const routine = routines.find((r) => r.userId === traineeId);
+app.get('/routines/trainee/:traineeId', authenticateToken, async (req, res) => {
+    try {
+        const { traineeId } = req.params;
 
-    if (!routine) {
-        return res.status(404).json({ error: 'Routine not found' });
+        const routine = await prisma.routine.findFirst({
+            where: { userId: traineeId },
+            include: {
+                trainee: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        if (!routine) {
+            return res.status(404).json({ error: 'Routine not found' });
+        }
+
+        // Parse the availability JSON
+        routine.availability = JSON.parse(routine.availability);
+
+        res.status(200).json(routine);
+    } catch (error) {
+        console.error('Get routine error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    res.status(200).json(routine);
 });
 
 // Partially update a trainee's routine
-app.patch('/routines/trainee/:traineeId', authenticateToken, (req, res) => {
-    const { traineeId } = req.params;
-    const { availability } = req.body;
+app.patch('/routines/trainee/:traineeId', authenticateToken, async (req, res) => {
+    try {
+        const { traineeId } = req.params;
+        const { availability } = req.body;
 
-    const routineIndex = routines.findIndex((r) => r.userId === traineeId);
-    if (routineIndex === -1) {
-        return res.status(404).json({ error: 'Routine not found' });
+        if (!availability) {
+            return res.status(400).json({ error: 'availability is required' });
+        }
+
+        const updatedRoutine = await prisma.routine.updateMany({
+            where: { userId: traineeId },
+            data: {
+                availability: JSON.stringify(availability)
+            }
+        });
+
+        if (updatedRoutine.count === 0) {
+            return res.status(404).json({ error: 'Routine not found' });
+        }
+
+        // Get the updated routine to return
+        const routine = await prisma.routine.findFirst({
+            where: { userId: traineeId },
+            include: {
+                trainee: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        routine.availability = JSON.parse(routine.availability);
+
+        res.status(200).json(routine);
+    } catch (error) {
+        console.error('Update routine error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    if (availability !== undefined) {
-        routines[routineIndex].availability = availability;
-    }
-    routines[routineIndex].updatedAt = new Date().toISOString();
-
-    res.status(200).json(routines[routineIndex]);
 });
 
 // Delete a routine
-app.delete('/routines/trainee/:traineeId', authenticateToken, (req, res) => {
-    const { traineeId } = req.params;
-    const routineIndex = routines.findIndex((r) => r.userId === traineeId);
+app.delete('/routines/trainee/:traineeId', authenticateToken, async (req, res) => {
+    try {
+        const { traineeId } = req.params;
 
-    if (routineIndex === -1) {
-        return res.status(404).json({ error: 'Routine not found' });
+        const deletedRoutine = await prisma.routine.deleteMany({
+            where: { userId: traineeId }
+        });
+
+        if (deletedRoutine.count === 0) {
+            return res.status(404).json({ error: 'Resource not found' });
+        }
+
+        res.status(204).send();
+    } catch (error) {
+        console.error('Delete routine error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    routines.splice(routineIndex, 1);
-    res.status(204).send();
 });
 
 // ---------------------------------------------------------------------------
 // /registrations endpoints
-// OpenAPI references:
-//   GET /registrations
-//   POST /registrations
-//   GET /registrations/{registrationId}
-//   PATCH /registrations/{registrationId}
-//   DELETE /registrations/{registrationId}
 // ---------------------------------------------------------------------------
 
 // List all registrations
-app.get('/registrations', authenticateToken, (req, res) => {
-    res.status(200).json(registrations);
+app.get('/registrations', authenticateToken, async (req, res) => {
+    try {
+        const registrations = await prisma.registration.findMany({
+            include: {
+                trainee: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        res.status(200).json(registrations);
+    } catch (error) {
+        console.error('List registrations error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Register for a workout
-app.post('/registrations', authenticateToken, (req, res) => {
-    const { eventId, userId, inviteeEmail, startTime, endTime, status } = req.body;
+app.post('/registrations', authenticateToken, async (req, res) => {
+    try {
+        const { eventId, userId, inviteeEmail, startTime, endTime, status } = req.body;
 
-    if (!eventId || !userId || !inviteeEmail || !startTime) {
-        return res.status(400).json({ error: 'Invalid input' });
+        if (!eventId || !userId || !inviteeEmail || !startTime) {
+            return res.status(400).json({ error: 'eventId, userId, inviteeEmail, and startTime are required' });
+        }
+
+        // Check if trainee exists
+        const trainee = await prisma.trainee.findUnique({
+            where: { id: userId }
+        });
+
+        if (!trainee) {
+            return res.status(400).json({ error: 'Trainee not found' });
+        }
+
+        const newRegistration = await prisma.registration.create({
+            data: {
+                eventId,
+                userId,
+                inviteeEmail,
+                startTime: new Date(startTime),
+                endTime: endTime ? new Date(endTime) : null,
+                status: status || 'scheduled'
+            },
+            include: {
+                trainee: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        res.status(201).json(newRegistration);
+    } catch (error) {
+        console.error('Create registration error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    const newRegistration = {
-        id: Date.now().toString(),
-        eventId,
-        userId,
-        inviteeEmail,
-        startTime,
-        endTime: endTime || null,
-        status: status || 'scheduled',
-        createdAt: new Date().toISOString()
-    };
-
-    registrations.push(newRegistration);
-    res.status(201).json(newRegistration);
 });
 
 // Get registration details
-app.get('/registrations/:registrationId', authenticateToken, (req, res) => {
-    const { registrationId } = req.params;
-    const registration = registrations.find((r) => r.id === registrationId);
+app.get('/registrations/:registrationId', authenticateToken, async (req, res) => {
+    try {
+        const { registrationId } = req.params;
 
-    if (!registration) {
-        return res.status(404).json({ error: 'Registration not found' });
+        const registration = await prisma.registration.findUnique({
+            where: { id: registrationId },
+            include: {
+                trainee: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        if (!registration) {
+            return res.status(404).json({ error: 'Registration not found' });
+        }
+
+        res.status(200).json(registration);
+    } catch (error) {
+        console.error('Get registration error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    res.status(200).json(registration);
 });
 
 // Partially update a registration
-app.patch('/registrations/:registrationId', authenticateToken, (req, res) => {
-    const { registrationId } = req.params;
-    const { eventId, userId, inviteeEmail, startTime, endTime } = req.body;
+app.patch('/registrations/:registrationId', authenticateToken, async (req, res) => {
+    try {
+        const { registrationId } = req.params;
+        const { eventId, userId, inviteeEmail, startTime, endTime, status } = req.body;
 
-    const regIndex = registrations.findIndex((r) => r.id === registrationId);
-    if (regIndex === -1) {
-        return res.status(404).json({ error: 'Registration not found' });
+        // Build update object dynamically
+        const updateData = {};
+        if (eventId !== undefined) updateData.eventId = eventId;
+        if (userId !== undefined) updateData.userId = userId;
+        if (inviteeEmail !== undefined) updateData.inviteeEmail = inviteeEmail;
+        if (startTime !== undefined) updateData.startTime = new Date(startTime);
+        if (endTime !== undefined) updateData.endTime = endTime ? new Date(endTime) : null;
+        if (status !== undefined) updateData.status = status;
+
+        const updatedRegistration = await prisma.registration.update({
+            where: { id: registrationId },
+            data: updateData,
+            include: {
+                trainee: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        res.status(200).json(updatedRegistration);
+    } catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Registration not found' });
+        }
+        console.error('Update registration error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    if (eventId !== undefined) registrations[regIndex].eventId = eventId;
-    if (userId !== undefined) registrations[regIndex].userId = userId;
-    if (inviteeEmail !== undefined) registrations[regIndex].inviteeEmail = inviteeEmail;
-    if (startTime !== undefined) registrations[regIndex].startTime = startTime;
-    if (endTime !== undefined) registrations[regIndex].endTime = endTime;
-    registrations[regIndex].updatedAt = new Date().toISOString();
-
-    res.status(200).json(registrations[regIndex]);
 });
 
 // Delete a registration
-app.delete('/registrations/:registrationId', authenticateToken, (req, res) => {
-    const { registrationId } = req.params;
-    const index = registrations.findIndex((r) => r.id === registrationId);
+app.delete('/registrations/:registrationId', authenticateToken, async (req, res) => {
+    try {
+        const { registrationId } = req.params;
 
-    if (index === -1) {
-        return res.status(404).json({ error: 'Registration not found' });
+        await prisma.registration.delete({
+            where: { id: registrationId }
+        });
+
+        res.status(204).send();
+    } catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Resource not found' });
+        }
+        console.error('Delete registration error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
+});
 
-    registrations.splice(index, 1);
-    res.status(204).send();
+// ---------------------------------------------------------------------------
+// Graceful shutdown
+// ---------------------------------------------------------------------------
+process.on('SIGINT', async () => {
+    console.log('Shutting down gracefully...');
+    await prisma.$disconnect();
+    process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+    console.log('Shutting down gracefully...');
+    await prisma.$disconnect();
+    process.exit(0);
 });
 
 // ---------------------------------------------------------------------------
@@ -468,5 +792,6 @@ app.delete('/registrations/:registrationId', authenticateToken, (req, res) => {
 // ---------------------------------------------------------------------------
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
-    console.log(`Swagger UI available at http://localhost:${port}/api-docs-en`);
+    console.log(`Swagger UI (EN) available at http://localhost:${port}/api-docs-en`);
+    console.log(`Swagger UI (ET) available at http://localhost:${port}/api-docs-et`);
 });
