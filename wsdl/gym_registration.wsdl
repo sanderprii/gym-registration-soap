@@ -88,7 +88,7 @@
 
             <xs:complexType name="TraineeArray">
                 <xs:sequence>
-                    <xs:element name="trainee" type="tns:Trainee" maxOccurs="unbounded"/>
+                    <xs:element name="trainee" type="tns:Trainee" minOccurs="0" maxOccurs="unbounded"/>
                 </xs:sequence>
             </xs:complexType>
 
@@ -126,7 +126,7 @@
 
             <xs:complexType name="WorkoutArray">
                 <xs:sequence>
-                    <xs:element name="workout" type="tns:Workout" maxOccurs="unbounded"/>
+                    <xs:element name="workout" type="tns:Workout" minOccurs="0" maxOccurs="unbounded"/>
                 </xs:sequence>
             </xs:complexType>
 
@@ -141,7 +141,7 @@
 
             <xs:complexType name="TimeSlotArray">
                 <xs:sequence>
-                    <xs:element name="timeSlot" type="tns:TimeSlot" maxOccurs="unbounded"/>
+                    <xs:element name="timeSlot" type="tns:TimeSlot" minOccurs="0" maxOccurs="unbounded"/>
                 </xs:sequence>
             </xs:complexType>
 
@@ -172,7 +172,7 @@
 
             <xs:complexType name="RoutineArray">
                 <xs:sequence>
-                    <xs:element name="routine" type="tns:Routine" maxOccurs="unbounded"/>
+                    <xs:element name="routine" type="tns:Routine" minOccurs="0" maxOccurs="unbounded"/>
                 </xs:sequence>
             </xs:complexType>
 
@@ -217,7 +217,7 @@
 
             <xs:complexType name="RegistrationArray">
                 <xs:sequence>
-                    <xs:element name="registration" type="tns:Registration" maxOccurs="unbounded"/>
+                    <xs:element name="registration" type="tns:Registration" minOccurs="0" maxOccurs="unbounded"/>
                 </xs:sequence>
             </xs:complexType>
 
@@ -303,7 +303,13 @@
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
-            <xs:element name="GetWorkoutsResponse" type="tns:WorkoutArray"/>
+            <xs:element name="GetWorkoutsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="workout" type="tns:Workout" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
             <xs:element name="CreateWorkoutRequest">
                 <xs:complexType>
                     <xs:sequence>
@@ -356,7 +362,13 @@
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
-            <xs:element name="GetRoutinesResponse" type="tns:RoutineArray"/>
+            <xs:element name="GetRoutinesResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="routine" type="tns:Routine" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
             <xs:element name="CreateRoutineRequest">
                 <xs:complexType>
                     <xs:sequence>
@@ -408,7 +420,13 @@
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
-            <xs:element name="GetRegistrationsResponse" type="tns:RegistrationArray"/>
+            <xs:element name="GetRegistrationsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="registration" type="tns:Registration" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
             <xs:element name="CreateRegistrationRequest">
                 <xs:complexType>
                     <xs:sequence>
