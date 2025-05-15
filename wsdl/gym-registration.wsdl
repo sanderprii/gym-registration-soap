@@ -1,0 +1,866 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:tns="http://gym-registration.example.com/"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             targetNamespace="http://gym-registration.example.com/"
+             elementFormDefault="qualified">
+
+    <types>
+        <xs:schema targetNamespace="http://gym-registration.example.com/" elementFormDefault="qualified">
+
+            <!-- Common Types -->
+            <xs:complexType name="PaginationType">
+                <xs:sequence>
+                    <xs:element name="page" type="xs:int"/>
+                    <xs:element name="pageSize" type="xs:int"/>
+                    <xs:element name="total" type="xs:int"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <!-- Trainee Types -->
+            <xs:complexType name="TraineeType">
+                <xs:sequence>
+                    <xs:element name="id" type="xs:string"/>
+                    <xs:element name="name" type="xs:string"/>
+                    <xs:element name="email" type="xs:string"/>
+                    <xs:element name="password" type="xs:string" minOccurs="0"/>
+                    <xs:element name="timezone" type="xs:string" minOccurs="0"/>
+                    <xs:element name="createdAt" type="xs:dateTime" minOccurs="0"/>
+                    <xs:element name="updatedAt" type="xs:dateTime" minOccurs="0"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="TraineeListType">
+                <xs:sequence>
+                    <xs:element name="data" type="tns:TraineeType" maxOccurs="unbounded"/>
+                    <xs:element name="pagination" type="tns:PaginationType"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <!-- Workout Types -->
+            <xs:complexType name="WorkoutType">
+                <xs:sequence>
+                    <xs:element name="id" type="xs:string"/>
+                    <xs:element name="name" type="xs:string"/>
+                    <xs:element name="duration" type="xs:int"/>
+                    <xs:element name="description" type="xs:string" minOccurs="0"/>
+                    <xs:element name="color" type="xs:string" minOccurs="0"/>
+                    <xs:element name="createdAt" type="xs:dateTime" minOccurs="0"/>
+                    <xs:element name="updatedAt" type="xs:dateTime" minOccurs="0"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <!-- Routine Types -->
+            <xs:complexType name="TimeSlotType">
+                <xs:sequence>
+                    <xs:element name="day" type="xs:string"/>
+                    <xs:element name="startTime" type="xs:string"/>
+                    <xs:element name="endTime" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="RoutineType">
+                <xs:sequence>
+                    <xs:element name="id" type="xs:string"/>
+                    <xs:element name="userId" type="xs:string"/>
+                    <xs:element name="availability" type="tns:TimeSlotType" maxOccurs="unbounded"/>
+                    <xs:element name="trainee" type="tns:TraineeType" minOccurs="0"/>
+                    <xs:element name="createdAt" type="xs:dateTime" minOccurs="0"/>
+                    <xs:element name="updatedAt" type="xs:dateTime" minOccurs="0"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <!-- Registration Types -->
+            <xs:complexType name="RegistrationType">
+                <xs:sequence>
+                    <xs:element name="id" type="xs:string"/>
+                    <xs:element name="eventId" type="xs:string"/>
+                    <xs:element name="userId" type="xs:string"/>
+                    <xs:element name="inviteeEmail" type="xs:string"/>
+                    <xs:element name="startTime" type="xs:dateTime"/>
+                    <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
+                    <xs:element name="status" type="xs:string"/>
+                    <xs:element name="trainee" type="tns:TraineeType" minOccurs="0"/>
+                    <xs:element name="createdAt" type="xs:dateTime" minOccurs="0"/>
+                    <xs:element name="updatedAt" type="xs:dateTime" minOccurs="0"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <!-- Session Types -->
+            <xs:complexType name="SessionType">
+                <xs:sequence>
+                    <xs:element name="token" type="xs:string"/>
+                    <xs:element name="trainee" type="tns:TraineeType"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="SessionCheckType">
+                <xs:sequence>
+                    <xs:element name="authenticated" type="xs:boolean"/>
+                    <xs:element name="trainee" type="tns:TraineeType"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <!-- Error Type -->
+            <xs:complexType name="ErrorType">
+                <xs:sequence>
+                    <xs:element name="message" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <!-- Request/Response Elements for Sessions -->
+            <xs:element name="CreateSessionRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="email" type="xs:string"/>
+                        <xs:element name="password" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CreateSessionResponse" type="tns:SessionType"/>
+
+            <xs:element name="DeleteSessionRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="DeleteSessionResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="message" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="CheckSessionRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CheckSessionResponse" type="tns:SessionCheckType"/>
+
+            <!-- Request/Response Elements for Trainees -->
+            <xs:element name="ListTraineesRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="page" type="xs:int" default="1"/>
+                        <xs:element name="pageSize" type="xs:int" default="20"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ListTraineesResponse" type="tns:TraineeListType"/>
+
+            <xs:element name="CreateTraineeRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="name" type="xs:string"/>
+                        <xs:element name="email" type="xs:string"/>
+                        <xs:element name="password" type="xs:string"/>
+                        <xs:element name="timezone" type="xs:string" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CreateTraineeResponse" type="tns:TraineeType"/>
+
+            <xs:element name="GetTraineeRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="traineeId" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetTraineeResponse" type="tns:TraineeType"/>
+
+            <xs:element name="UpdateTraineeRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="traineeId" type="xs:string"/>
+                        <xs:element name="name" type="xs:string" minOccurs="0"/>
+                        <xs:element name="email" type="xs:string" minOccurs="0"/>
+                        <xs:element name="password" type="xs:string" minOccurs="0"/>
+                        <xs:element name="timezone" type="xs:string" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="UpdateTraineeResponse" type="tns:TraineeType"/>
+
+            <xs:element name="DeleteTraineeRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="traineeId" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="DeleteTraineeResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="success" type="xs:boolean"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <!-- Request/Response Elements for Workouts -->
+            <xs:element name="ListWorkoutsRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ListWorkoutsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="workouts" type="tns:WorkoutType" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="CreateWorkoutRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="name" type="xs:string"/>
+                        <xs:element name="duration" type="xs:int"/>
+                        <xs:element name="description" type="xs:string" minOccurs="0"/>
+                        <xs:element name="color" type="xs:string" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CreateWorkoutResponse" type="tns:WorkoutType"/>
+
+            <xs:element name="GetWorkoutRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="workoutId" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetWorkoutResponse" type="tns:WorkoutType"/>
+
+            <xs:element name="UpdateWorkoutRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="workoutId" type="xs:string"/>
+                        <xs:element name="name" type="xs:string" minOccurs="0"/>
+                        <xs:element name="duration" type="xs:int" minOccurs="0"/>
+                        <xs:element name="description" type="xs:string" minOccurs="0"/>
+                        <xs:element name="color" type="xs:string" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="UpdateWorkoutResponse" type="tns:WorkoutType"/>
+
+            <xs:element name="DeleteWorkoutRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="workoutId" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="DeleteWorkoutResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="success" type="xs:boolean"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <!-- Request/Response Elements for Routines -->
+            <xs:element name="ListRoutinesRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="traineeId" type="xs:string" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ListRoutinesResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="routines" type="tns:RoutineType" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="CreateRoutineRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="userId" type="xs:string"/>
+                        <xs:element name="availability" type="tns:TimeSlotType" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CreateRoutineResponse" type="tns:RoutineType"/>
+
+            <xs:element name="GetTraineeRoutineRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="traineeId" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetTraineeRoutineResponse" type="tns:RoutineType"/>
+
+            <xs:element name="UpdateTraineeRoutineRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="traineeId" type="xs:string"/>
+                        <xs:element name="availability" type="tns:TimeSlotType" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="UpdateTraineeRoutineResponse" type="tns:RoutineType"/>
+
+            <xs:element name="DeleteTraineeRoutineRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="traineeId" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="DeleteTraineeRoutineResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="success" type="xs:boolean"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <!-- Request/Response Elements for Registrations -->
+            <xs:element name="ListRegistrationsRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ListRegistrationsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="registrations" type="tns:RegistrationType" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="CreateRegistrationRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="eventId" type="xs:string"/>
+                        <xs:element name="userId" type="xs:string"/>
+                        <xs:element name="inviteeEmail" type="xs:string"/>
+                        <xs:element name="startTime" type="xs:dateTime"/>
+                        <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
+                        <xs:element name="status" type="xs:string" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CreateRegistrationResponse" type="tns:RegistrationType"/>
+
+            <xs:element name="GetRegistrationRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="registrationId" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetRegistrationResponse" type="tns:RegistrationType"/>
+
+            <xs:element name="UpdateRegistrationRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="registrationId" type="xs:string"/>
+                        <xs:element name="eventId" type="xs:string" minOccurs="0"/>
+                        <xs:element name="userId" type="xs:string" minOccurs="0"/>
+                        <xs:element name="inviteeEmail" type="xs:string" minOccurs="0"/>
+                        <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
+                        <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
+                        <xs:element name="status" type="xs:string" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="UpdateRegistrationResponse" type="tns:RegistrationType"/>
+
+            <xs:element name="DeleteRegistrationRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="token" type="xs:string"/>
+                        <xs:element name="registrationId" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="DeleteRegistrationResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="success" type="xs:boolean"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <!-- Error Element -->
+            <xs:element name="ErrorResponse" type="tns:ErrorType"/>
+
+        </xs:schema>
+    </types>
+
+    <!-- Messages -->
+    <!-- Session Messages -->
+    <message name="CreateSessionRequestMsg">
+        <part name="request" element="tns:CreateSessionRequest"/>
+    </message>
+    <message name="CreateSessionResponseMsg">
+        <part name="response" element="tns:CreateSessionResponse"/>
+    </message>
+    <message name="DeleteSessionRequestMsg">
+        <part name="request" element="tns:DeleteSessionRequest"/>
+    </message>
+    <message name="DeleteSessionResponseMsg">
+        <part name="response" element="tns:DeleteSessionResponse"/>
+    </message>
+    <message name="CheckSessionRequestMsg">
+        <part name="request" element="tns:CheckSessionRequest"/>
+    </message>
+    <message name="CheckSessionResponseMsg">
+        <part name="response" element="tns:CheckSessionResponse"/>
+    </message>
+
+    <!-- Trainee Messages -->
+    <message name="ListTraineesRequestMsg">
+        <part name="request" element="tns:ListTraineesRequest"/>
+    </message>
+    <message name="ListTraineesResponseMsg">
+        <part name="response" element="tns:ListTraineesResponse"/>
+    </message>
+    <message name="CreateTraineeRequestMsg">
+        <part name="request" element="tns:CreateTraineeRequest"/>
+    </message>
+    <message name="CreateTraineeResponseMsg">
+        <part name="response" element="tns:CreateTraineeResponse"/>
+    </message>
+    <message name="GetTraineeRequestMsg">
+        <part name="request" element="tns:GetTraineeRequest"/>
+    </message>
+    <message name="GetTraineeResponseMsg">
+        <part name="response" element="tns:GetTraineeResponse"/>
+    </message>
+    <message name="UpdateTraineeRequestMsg">
+        <part name="request" element="tns:UpdateTraineeRequest"/>
+    </message>
+    <message name="UpdateTraineeResponseMsg">
+        <part name="response" element="tns:UpdateTraineeResponse"/>
+    </message>
+    <message name="DeleteTraineeRequestMsg">
+        <part name="request" element="tns:DeleteTraineeRequest"/>
+    </message>
+    <message name="DeleteTraineeResponseMsg">
+        <part name="response" element="tns:DeleteTraineeResponse"/>
+    </message>
+
+    <!-- Workout Messages -->
+    <message name="ListWorkoutsRequestMsg">
+        <part name="request" element="tns:ListWorkoutsRequest"/>
+    </message>
+    <message name="ListWorkoutsResponseMsg">
+        <part name="response" element="tns:ListWorkoutsResponse"/>
+    </message>
+    <message name="CreateWorkoutRequestMsg">
+        <part name="request" element="tns:CreateWorkoutRequest"/>
+    </message>
+    <message name="CreateWorkoutResponseMsg">
+        <part name="response" element="tns:CreateWorkoutResponse"/>
+    </message>
+    <message name="GetWorkoutRequestMsg">
+        <part name="request" element="tns:GetWorkoutRequest"/>
+    </message>
+    <message name="GetWorkoutResponseMsg">
+        <part name="response" element="tns:GetWorkoutResponse"/>
+    </message>
+    <message name="UpdateWorkoutRequestMsg">
+        <part name="request" element="tns:UpdateWorkoutRequest"/>
+    </message>
+    <message name="UpdateWorkoutResponseMsg">
+        <part name="response" element="tns:UpdateWorkoutResponse"/>
+    </message>
+    <message name="DeleteWorkoutRequestMsg">
+        <part name="request" element="tns:DeleteWorkoutRequest"/>
+    </message>
+    <message name="DeleteWorkoutResponseMsg">
+        <part name="response" element="tns:DeleteWorkoutResponse"/>
+    </message>
+
+    <!-- Routine Messages -->
+    <message name="ListRoutinesRequestMsg">
+        <part name="request" element="tns:ListRoutinesRequest"/>
+    </message>
+    <message name="ListRoutinesResponseMsg">
+        <part name="response" element="tns:ListRoutinesResponse"/>
+    </message>
+    <message name="CreateRoutineRequestMsg">
+        <part name="request" element="tns:CreateRoutineRequest"/>
+    </message>
+    <message name="CreateRoutineResponseMsg">
+        <part name="response" element="tns:CreateRoutineResponse"/>
+    </message>
+    <message name="GetTraineeRoutineRequestMsg">
+        <part name="request" element="tns:GetTraineeRoutineRequest"/>
+    </message>
+    <message name="GetTraineeRoutineResponseMsg">
+        <part name="response" element="tns:GetTraineeRoutineResponse"/>
+    </message>
+    <message name="UpdateTraineeRoutineRequestMsg">
+        <part name="request" element="tns:UpdateTraineeRoutineRequest"/>
+    </message>
+    <message name="UpdateTraineeRoutineResponseMsg">
+        <part name="response" element="tns:UpdateTraineeRoutineResponse"/>
+    </message>
+    <message name="DeleteTraineeRoutineRequestMsg">
+        <part name="request" element="tns:DeleteTraineeRoutineRequest"/>
+    </message>
+    <message name="DeleteTraineeRoutineResponseMsg">
+        <part name="response" element="tns:DeleteTraineeRoutineResponse"/>
+    </message>
+
+    <!-- Registration Messages -->
+    <message name="ListRegistrationsRequestMsg">
+        <part name="request" element="tns:ListRegistrationsRequest"/>
+    </message>
+    <message name="ListRegistrationsResponseMsg">
+        <part name="response" element="tns:ListRegistrationsResponse"/>
+    </message>
+    <message name="CreateRegistrationRequestMsg">
+        <part name="request" element="tns:CreateRegistrationRequest"/>
+    </message>
+    <message name="CreateRegistrationResponseMsg">
+        <part name="response" element="tns:CreateRegistrationResponse"/>
+    </message>
+    <message name="GetRegistrationRequestMsg">
+        <part name="request" element="tns:GetRegistrationRequest"/>
+    </message>
+    <message name="GetRegistrationResponseMsg">
+        <part name="response" element="tns:GetRegistrationResponse"/>
+    </message>
+    <message name="UpdateRegistrationRequestMsg">
+        <part name="request" element="tns:UpdateRegistrationRequest"/>
+    </message>
+    <message name="UpdateRegistrationResponseMsg">
+        <part name="response" element="tns:UpdateRegistrationResponse"/>
+    </message>
+    <message name="DeleteRegistrationRequestMsg">
+        <part name="request" element="tns:DeleteRegistrationRequest"/>
+    </message>
+    <message name="DeleteRegistrationResponseMsg">
+        <part name="response" element="tns:DeleteRegistrationResponse"/>
+    </message>
+
+    <!-- Error Message -->
+    <message name="ErrorResponseMsg">
+        <part name="error" element="tns:ErrorResponse"/>
+    </message>
+
+    <!-- Port Type -->
+    <portType name="GymRegistrationPortType">
+        <!-- Session Operations -->
+        <operation name="CreateSession">
+            <input message="tns:CreateSessionRequestMsg"/>
+            <output message="tns:CreateSessionResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="DeleteSession">
+            <input message="tns:DeleteSessionRequestMsg"/>
+            <output message="tns:DeleteSessionResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="CheckSession">
+            <input message="tns:CheckSessionRequestMsg"/>
+            <output message="tns:CheckSessionResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+
+        <!-- Trainee Operations -->
+        <operation name="ListTrainees">
+            <input message="tns:ListTraineesRequestMsg"/>
+            <output message="tns:ListTraineesResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="CreateTrainee">
+            <input message="tns:CreateTraineeRequestMsg"/>
+            <output message="tns:CreateTraineeResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="GetTrainee">
+            <input message="tns:GetTraineeRequestMsg"/>
+            <output message="tns:GetTraineeResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="UpdateTrainee">
+            <input message="tns:UpdateTraineeRequestMsg"/>
+            <output message="tns:UpdateTraineeResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="DeleteTrainee">
+            <input message="tns:DeleteTraineeRequestMsg"/>
+            <output message="tns:DeleteTraineeResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+
+        <!-- Workout Operations -->
+        <operation name="ListWorkouts">
+            <input message="tns:ListWorkoutsRequestMsg"/>
+            <output message="tns:ListWorkoutsResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="CreateWorkout">
+            <input message="tns:CreateWorkoutRequestMsg"/>
+            <output message="tns:CreateWorkoutResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="GetWorkout">
+            <input message="tns:GetWorkoutRequestMsg"/>
+            <output message="tns:GetWorkoutResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="UpdateWorkout">
+            <input message="tns:UpdateWorkoutRequestMsg"/>
+            <output message="tns:UpdateWorkoutResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="DeleteWorkout">
+            <input message="tns:DeleteWorkoutRequestMsg"/>
+            <output message="tns:DeleteWorkoutResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+
+        <!-- Routine Operations -->
+        <operation name="ListRoutines">
+            <input message="tns:ListRoutinesRequestMsg"/>
+            <output message="tns:ListRoutinesResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="CreateRoutine">
+            <input message="tns:CreateRoutineRequestMsg"/>
+            <output message="tns:CreateRoutineResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="GetTraineeRoutine">
+            <input message="tns:GetTraineeRoutineRequestMsg"/>
+            <output message="tns:GetTraineeRoutineResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="UpdateTraineeRoutine">
+            <input message="tns:UpdateTraineeRoutineRequestMsg"/>
+            <output message="tns:UpdateTraineeRoutineResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="DeleteTraineeRoutine">
+            <input message="tns:DeleteTraineeRoutineRequestMsg"/>
+            <output message="tns:DeleteTraineeRoutineResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+
+        <!-- Registration Operations -->
+        <operation name="ListRegistrations">
+            <input message="tns:ListRegistrationsRequestMsg"/>
+            <output message="tns:ListRegistrationsResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="CreateRegistration">
+            <input message="tns:CreateRegistrationRequestMsg"/>
+            <output message="tns:CreateRegistrationResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="GetRegistration">
+            <input message="tns:GetRegistrationRequestMsg"/>
+            <output message="tns:GetRegistrationResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="UpdateRegistration">
+            <input message="tns:UpdateRegistrationRequestMsg"/>
+            <output message="tns:UpdateRegistrationResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+        <operation name="DeleteRegistration">
+            <input message="tns:DeleteRegistrationRequestMsg"/>
+            <output message="tns:DeleteRegistrationResponseMsg"/>
+            <fault name="error" message="tns:ErrorResponseMsg"/>
+        </operation>
+    </portType>
+
+    <!-- Binding -->
+    <binding name="GymRegistrationSoapBinding" type="tns:GymRegistrationPortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+        <!-- Session Operations -->
+        <operation name="CreateSession">
+            <soap:operation soapAction="urn:CreateSession"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="DeleteSession">
+            <soap:operation soapAction="urn:DeleteSession"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="CheckSession">
+            <soap:operation soapAction="urn:CheckSession"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+
+        <!-- Trainee Operations -->
+        <operation name="ListTrainees">
+            <soap:operation soapAction="urn:ListTrainees"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="CreateTrainee">
+            <soap:operation soapAction="urn:CreateTrainee"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="GetTrainee">
+            <soap:operation soapAction="urn:GetTrainee"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="UpdateTrainee">
+            <soap:operation soapAction="urn:UpdateTrainee"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="DeleteTrainee">
+            <soap:operation soapAction="urn:DeleteTrainee"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+
+        <!-- Workout Operations -->
+        <operation name="ListWorkouts">
+            <soap:operation soapAction="urn:ListWorkouts"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="CreateWorkout">
+            <soap:operation soapAction="urn:CreateWorkout"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="GetWorkout">
+            <soap:operation soapAction="urn:GetWorkout"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="UpdateWorkout">
+            <soap:operation soapAction="urn:UpdateWorkout"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="DeleteWorkout">
+            <soap:operation soapAction="urn:DeleteWorkout"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+
+        <!-- Routine Operations -->
+        <operation name="ListRoutines">
+            <soap:operation soapAction="urn:ListRoutines"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="CreateRoutine">
+            <soap:operation soapAction="urn:CreateRoutine"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="GetTraineeRoutine">
+            <soap:operation soapAction="urn:GetTraineeRoutine"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="UpdateTraineeRoutine">
+            <soap:operation soapAction="urn:UpdateTraineeRoutine"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="DeleteTraineeRoutine">
+            <soap:operation soapAction="urn:DeleteTraineeRoutine"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+
+        <!-- Registration Operations -->
+        <operation name="ListRegistrations">
+            <soap:operation soapAction="urn:ListRegistrations"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="CreateRegistration">
+            <soap:operation soapAction="urn:CreateRegistration"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="GetRegistration">
+            <soap:operation soapAction="urn:GetRegistration"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="UpdateRegistration">
+            <soap:operation soapAction="urn:UpdateRegistration"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+        <operation name="DeleteRegistration">
+            <soap:operation soapAction="urn:DeleteRegistration"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="error"><soap:fault name="error" use="literal"/></fault>
+        </operation>
+    </binding>
+
+    <!-- Service -->
+    <service name="GymRegistrationService">
+        <port name="GymRegistrationPort" binding="tns:GymRegistrationSoapBinding">
+            <soap:address location="http://localhost:3001/soap"/>
+        </port>
+    </service>
+
+</definitions>

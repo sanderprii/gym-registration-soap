@@ -187,7 +187,7 @@ chmod +x tests/test.sh
 ### Run Client Example
 ```bash
 # Test all SOAP operations
-npm run test:client
+node client/example.js
 ```
 
 ### Test Coverage
@@ -222,37 +222,7 @@ Set these in `docker-compose.yml`:
 
 ## Client Examples
 
-### SOAP Client (Node.js)
-```javascript
-const soap = require('soap');
 
-const client = await soap.createClientAsync('http://localhost:3001/soap?wsdl');
-
-// Login
-const [loginResult] = await client.LoginAsync({
-  email: 'user@example.com',
-  password: 'password'
-});
-
-// Use token for other operations
-const [trainees] = await client.GetTraineesAsync({
-  token: loginResult.token,
-  page: 1,
-  pageSize: 10
-});
-```
-
-### REST Client (curl)
-```bash
-# Login
-curl -X POST http://localhost:3000/sessions \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password"}'
-
-# Use token
-curl http://localhost:3000/trainees \
-  -H "Authorization: Bearer <token>"
-```
 
 ## Project Structure
 
@@ -270,6 +240,7 @@ gym-registration-soap-api/
 │   └── soap_server.js      # SOAP service implementation
 ├── tests/
 │   └── test.sh             # Automated tests
+│   └── test.js              # Test scripts
 ├── server.js               # REST API server
 ├── prisma/
 │   ├── schema.prisma       # Database schema
@@ -300,91 +271,5 @@ npm run db:studio
 npm run db:reset
 ```
 
-### Adding New Operations
 
-1. **Update WSDL** (`wsdl/gym_registration.wsdl`)
-   - Add new operation to `portType`
-   - Define request/response messages
-   - Add to binding section
 
-2. **Implement SOAP Operation** (`src/soap_server.js`)
-   - Add function to service object
-   - Implement business logic
-   - Handle authentication and errors
-
-3. **Test Equivalence**
-   - Update test scripts
-   - Verify REST/SOAP responses match
-
-## Troubleshooting
-
-### Common Issues
-
-**SOAP Service Not Starting**
-```bash
-# Check if port is available
-lsof -i :3001
-
-# Check WSDL syntax
-xmllint --format wsdl/gym_registration.wsdl
-```
-
-**Database Issues**
-```bash
-# Reset database
-npm run db:reset
-
-# Check database file
-ls -la prisma/dev.db*
-```
-
-**Authentication Errors**
-```bash
-# Verify JWT secret
-echo $JWT_SECRET
-
-# Check token validity
-# Use jwt.io to decode tokens
-```
-
-### Debugging Tips
-
-1. **Enable Detailed Logging**
-   ```javascript
-   // In soap_server.js
-   const soap = require('soap');
-   soap.listen(app, '/soap', service, wsdl, {
-     verbose: true,
-     log: console.log
-   });
-   ```
-
-2. **Monitor HTTP Traffic**
-   ```bash
-   # Use tcpdump or Wireshark for SOAP messages
-   sudo tcpdump -i lo -A port 3001
-   ```
-
-3. **Validate SOAP Messages**
-   ```bash
-   # Save SOAP request/response to files
-   # Validate against WSDL schema
-   ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make changes ensuring REST/SOAP equivalence
-4. Add tests for new functionality
-5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details
-
----
-
-**Support**: For issues or questions, please open a GitHub issue.
-
-**Documentation**: Full API documentation available at Swagger UI endpoints when services are running.
